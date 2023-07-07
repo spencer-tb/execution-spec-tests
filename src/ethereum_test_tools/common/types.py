@@ -16,7 +16,14 @@ from evm_transition_tool import TransitionTool
 
 from ..code import Code, code_to_bytes, code_to_hex
 from ..reference_spec.reference_spec import ReferenceSpec
-from .constants import AddrAA, EmptyOmmersRoot, EngineAPIError, TestPrivateKey, ZeroAddress
+from .constants import (
+    AddrAA,
+    BeaconRoot,
+    EmptyOmmersRoot,
+    EngineAPIError,
+    TestPrivateKey,
+    ZeroAddress,
+)
 from .conversions import (
     address_or_none,
     address_to_bytes,
@@ -556,6 +563,7 @@ class Environment:
     withdrawals: Optional[List[Withdrawal]] = None
     parent_data_gas_used: Optional[int] = None
     parent_excess_data_gas: Optional[int] = None
+    parent_beacon_block_root: Optional[bytes] = None
     excess_data_gas: Optional[int] = None
     data_gas_used: Optional[int] = None
 
@@ -570,6 +578,7 @@ class Environment:
             parent_base_fee=parent.base_fee,
             parent_data_gas_used=parent.data_gas_used,
             parent_excess_data_gas=parent.excess_data_gas,
+            parent_beacon_block_root=parent.parent_beacon_block_root,
             parent_gas_used=parent.gas_used,
             parent_gas_limit=parent.gas_limit,
             parent_ommers_hash=parent.ommers_hash,
@@ -599,6 +608,7 @@ class Environment:
         env.parent_base_fee = new_parent.base_fee
         env.parent_data_gas_used = new_parent.data_gas_used
         env.parent_excess_data_gas = new_parent.excess_data_gas
+        env.parent_beacon_block_root = new_parent.parent_beacon_block_root
         env.parent_gas_used = new_parent.gas_used
         env.parent_gas_limit = new_parent.gas_limit
         env.parent_ommers_hash = new_parent.ommers_hash
@@ -648,6 +658,9 @@ class Environment:
             and res.parent_data_gas_used is None
         ):
             res.data_gas_used = 0
+
+        if fork.header_beacon_root_required(self.number, self.timestamp):
+            res.parent_beacon_block_root = BeaconRoot
 
         return res
 
@@ -1166,6 +1179,7 @@ class Header:
     withdrawals_root: Optional[bytes | Removable] = None
     data_gas_used: Optional[int | Removable] = None
     excess_data_gas: Optional[int | Removable] = None
+    parent_beacon_block_root: Optional[bytes | Removable] = None
     hash: Optional[bytes] = None
 
     REMOVE_FIELD: ClassVar[Removable] = Removable()
@@ -1200,6 +1214,7 @@ class FixtureHeader:
     data_gas_used: Optional[int] = None
     excess_data_gas: Optional[int] = None
     hash: Optional[bytes] = None
+    parent_beacon_block_root: Optional[bytes] = None
 
     @staticmethod
     def from_dict(source: Dict[str, Any]) -> "FixtureHeader":
@@ -1255,6 +1270,8 @@ class FixtureHeader:
             data_gas_used=int_or_none(source.get("dataGasUsed")),
             excess_data_gas=int_or_none(source.get("excessDataGas")),
             hash=bytes_or_none(source.get("hash")),
+            # TODO: Check that "beaconRoot" is correct finalized string
+            parent_beacon_block_root=bytes_or_none(source.get("beaconRoot")),
         )
 
     def join(self, modifier: Header) -> "FixtureHeader":
@@ -1308,6 +1325,8 @@ class FixtureHeader:
             header.append(Uint(self.data_gas_used))
         if self.excess_data_gas is not None:
             header.append(Uint(self.excess_data_gas))
+        if self.parent_beacon_block_root is not None:
+            header.append(self.parent_beacon_block_root)
 
         block = [
             header,
@@ -1633,6 +1652,7 @@ class JSONEncoder(json.JSONEncoder):
                 "parentExcessDataGas": str_or_none(obj.parent_excess_data_gas),
                 "currentExcessDataGas": str_or_none(obj.excess_data_gas),
                 "currentDataGasUsed": str_or_none(obj.data_gas_used),
+                "parentBeaconRoot": hash_string(obj.parent_beacon_block_root),
             }
 
             return {k: v for (k, v) in env.items() if v is not None}
@@ -1664,6 +1684,8 @@ class JSONEncoder(json.JSONEncoder):
                 header["dataGasUsed"] = hex(obj.data_gas_used)
             if obj.excess_data_gas is not None:
                 header["excessDataGas"] = hex(obj.excess_data_gas)
+            if obj.parent_beacon_block_root is not None:
+                header["beaconRoot"] = hex_or_none(obj.parent_beacon_block_root)
             return even_padding(
                 header,
                 excluded=[
@@ -1679,6 +1701,7 @@ class JSONEncoder(json.JSONEncoder):
                     "hash",
                     "withdrawalsRoot",
                     "extraData",
+                    "beaconRoot",
                 ],
             )
         elif isinstance(obj, FixtureTransaction):

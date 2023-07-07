@@ -80,6 +80,7 @@ class BlockchainTest(BaseTest):
             withdrawals_root=t8n.calc_withdrawals_root(env.withdrawals, fork)
             if env.withdrawals is not None
             else None,
+            parent_beacon_block_root=env.parent_beacon_block_root,
         )
 
         genesis_rlp, genesis.hash = genesis.build(
@@ -186,6 +187,7 @@ class BlockchainTest(BaseTest):
                     "nonce": "0x0000000000000000",
                     "baseFeePerGas": result.get("currentBaseFee"),
                     "excessDataGas": result.get("currentExcessDataGas"),
+                    "beaconRoot": env.parent_beacon_block_root,
                 }
             )
 

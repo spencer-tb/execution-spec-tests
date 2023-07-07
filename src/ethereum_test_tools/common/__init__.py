@@ -4,6 +4,7 @@ Common definitions and types.
 from .constants import (
     AddrAA,
     AddrBB,
+    BeaconRoot,
     EmptyTrieRoot,
     EngineAPIError,
     TestAddress,
@@ -52,6 +53,7 @@ __all__ = (
     "AddrAA",
     "AddrBB",
     "Auto",
+    "BeaconRoot",
     "Block",
     "EngineAPIError",
     "EmptyTrieRoot",
