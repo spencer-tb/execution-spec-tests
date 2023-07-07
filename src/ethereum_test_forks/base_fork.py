@@ -81,6 +81,14 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
 
     @classmethod
     @abstractmethod
+    def header_beacon_root_required(cls, block_number: int, timestamp: int) -> bool:
+        """
+        Returns true if the header must contain parent beacon block root
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
     def get_reward(cls, block_number: int, timestamp: int) -> int:
         """
         Returns the expected reward amount in wei of a given fork

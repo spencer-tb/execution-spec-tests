@@ -55,6 +55,13 @@ class Frontier(BaseFork):
         return False
 
     @classmethod
+    def header_beacon_root_required(cls, block_number: int, timestamp: int) -> bool:
+        """
+        At genesis, header must not contain parent beacon block root
+        """
+        return False
+
+    @classmethod
     def engine_new_payload_version(cls, block_number: int, timestamp: int) -> Optional[int]:
         """
         At genesis, payloads cannot be sent through the engine API
@@ -254,6 +261,13 @@ class Cancun(Shanghai):
     def header_data_gas_used_required(cls, block_number: int, timestamp: int) -> bool:
         """
         Data gas used is required starting from Cancun.
+        """
+        return True
+
+    @classmethod
+    def header_beacon_root_required(cls, block_number: int, timestamp: int) -> bool:
+        """
+        Parent beacon block root is required starting from Cancun.
         """
         return True
 
