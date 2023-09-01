@@ -480,7 +480,7 @@ CHECKSUM_ADDRESS = "0x8a0A19589531694250d570040a0c4B74576919B8"
                 "parentBlobGasUsed": "14",
                 "parentExcessBlobGas": "15",
                 "currentBlobGasUsed": "16",
-                "currentExcessBlobGas": "17",
+                "excessBlobGas": "17",
                 "blockHashes": {
                     "1": "0x0000000000000000000000000000000000000000000000000000000000000002",
                     "3": "0x0000000000000000000000000000000000000000000000000000000000000004",
