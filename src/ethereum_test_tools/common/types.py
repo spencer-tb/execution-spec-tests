@@ -2139,7 +2139,7 @@ class FixtureHeader:
         source=HeaderFieldSource(
             parse_type=Number,
             fork_requirement_check="header_blob_gas_used_required",
-            source_transition_tool="blobGasUsed",
+            source_transition_tool="currentBlobGasUsed",
         ),
         json_encoder=JSONEncoder.Field(name="blobGasUsed", cast_type=ZeroPaddedHexNumber),
     )
