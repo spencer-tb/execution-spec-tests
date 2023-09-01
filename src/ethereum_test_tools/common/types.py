@@ -1008,7 +1008,7 @@ class Environment:
     excess_blob_gas: Optional[NumberConvertible] = field(
         default=None,
         json_encoder=JSONEncoder.Field(
-            name="currentExcessBlobGas",
+            name="excessBlobGas",
             cast_type=Number,
         ),
     )
