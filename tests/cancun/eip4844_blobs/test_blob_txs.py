@@ -943,7 +943,7 @@ def test_blob_tx_attribute_calldata_opcodes(
     destination_account: str,
 ):
     """
-    Test calldata related opcodes to verify their behavior is not affected by blobs:
+    Test calldata related opcodes to veri
 
     - CALLDATALOAD
     - CALLDATASIZE
