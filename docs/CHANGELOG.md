@@ -19,6 +19,7 @@ Test fixtures for use by clients are available for each release on the [Github r
 - ✨ Docs: Changelog added ([#305](https://github.com/ethereum/execution-spec-tests/pull/305)).
 - ✨ CI/CD: Run development fork tests in Github Actions ([#302](https://github.com/ethereum/execution-spec-tests/pull/302)).
 - ✨ CI/CD: Generate test JSON fixtures on push ([#301](https://github.com/ethereum/execution-spec-tests/pull/303)).
+- ✨ Tooling: Add Python 3.12 support ([#309](https://github.com/ethereum/execution-spec-tests/pull/309)).
 
 ## [v1.0.4](https://github.com/ethereum/execution-spec-tests/releases/tag/v1.0.4) - 2023-09-21: 🐍 Cancun Devnet 9 Release 2
 
