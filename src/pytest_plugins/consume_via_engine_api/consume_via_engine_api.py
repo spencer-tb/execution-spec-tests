@@ -1,7 +1,6 @@
 """
-A hive simulator that executes test fixtures in the blockchain test format
-against clients by providing them a genesis state and blocks via the Engine
-API.
+A hive simulator that executes blocks against clients using the `engine_newPayloadVX` method from
+the Engine API, verifying the appropriate VALID/INVALID responses.
 
 Implemented using the pytest framework as a pytest plugin.
 """
