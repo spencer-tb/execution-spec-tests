@@ -4,6 +4,7 @@ the Engine API, verifying the appropriate VALID/INVALID responses.
 
 Implemented using the pytest framework as a pytest plugin.
 """
+
 import pytest
 
 
@@ -20,4 +21,4 @@ def test_suite_description() -> str:
     """
     The description of the hive test suite used in this simulator.
     """
-    return "Execute blockchain tests by sending blocks to a client via the Engine API."
+    return "Execute blockchain tests by against clients using the `engine_newPayloadVX` method."

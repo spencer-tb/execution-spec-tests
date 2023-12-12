@@ -5,7 +5,7 @@ we are executing blocks using the Engine API.
 
 # TODO: 1) Can we programmatically generate this?
 # TODO: 2) Can we generate a single ruleset for both rlp and engine_api simulators.
-forks = {
+client_fork_ruleset = {
     "Merge": {
         "HIVE_FORK_HOMESTEAD": 0,
         "HIVE_FORK_TANGERINE": 0,
