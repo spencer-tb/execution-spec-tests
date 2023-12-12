@@ -5,11 +5,13 @@ the appropriate VALID/INVALID responses.
 
 Implemented using the pytest framework as a pytest plugin.
 """
+
 import io
 import json
 from typing import Dict, List, Mapping
 
 import pytest
+from hexbytes import HexBytes
 from hive.client import Client, ClientType
 from hive.testing import HiveTest
 
