@@ -1,13 +1,45 @@
 """
-Test CALLCODE gas consumption
+abstract: Test CALLCODE gas consumption with value transfer
+Tests for an EthereumJS bug where CALLCODE gas was incorrectly calculated when a call had
+value transfer
+https://github.com/ethereumjs/ethereumjs-monorepo/issues/3194
+
+Test setup is 2 contracts where AAAB CALLs AAAA which then CALLCODEs a non-existent contract
+AAAC. The CALLCODE result is stored in AAAB's slot 0.
+
+Bytecode for AAAB contract (used to call contract AAAA and stores result of call execution)
+```
+PUSH1 0x00
+DUP1
+DUP1
+DUP1
+DUP1
+PUSH2 0xAAAA
+PUSH2 0x12D5 <- This is the gas limit set for the CALL/CODE execution when insufficient for
+CALLCODE execution
+CALL
+PUSH1 0x00
+SSTORE
+```
+
+Bytecode for AAAA contract (used to check CALL/CALLCODE execution when gas is less
+than/sufficient for execution)
+```
+PUSH1 0x00
+PUSH1 0x00
+PUSH1 0x00
+PUSH1 0x00
+PUSH1 0x01
+PUSH2 0xAACC
+PUSH2 0x1a90
+CALLCODE/CALL
+```
 """
 
 import pytest
 
-
 from ethereum_test_forks import Fork
-from ethereum_test_tools import Account, Environment
-from ethereum_test_tools import StateTestFiller, Transaction
+from ethereum_test_tools import Account, Environment, StateTestFiller, Transaction
 
 
 @pytest.mark.valid_from("London")
@@ -30,7 +62,7 @@ def test_callcode_with_gas(state_test: StateTestFiller, fork: Fork):
             nonce=1,
         ),
         "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b": Account(
-            balance=0xfffffffff,
+            balance=0xFFFFFFFFF,
             nonce=0,
         ),
     }
@@ -48,9 +80,7 @@ def test_callcode_with_gas(state_test: StateTestFiller, fork: Fork):
     )
 
     post = {
-        "0x000000000000000000000000000000000000aaab": Account(
-            storage={0x00: 0x01}
-        ),
+        "0x000000000000000000000000000000000000aaab": Account(storage={0x00: 0x01}),
     }
     state_test(env=env, pre=pre, post=post, txs=[tx])
 
@@ -75,7 +105,7 @@ def test_callcode_without_gas(state_test: StateTestFiller, fork: Fork):
             nonce=1,
         ),
         "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b": Account(
-            balance=0xfffffffff,
+            balance=0xFFFFFFFFF,
             nonce=0,
         ),
     }
@@ -93,8 +123,6 @@ def test_callcode_without_gas(state_test: StateTestFiller, fork: Fork):
     )
 
     post = {
-        "0x000000000000000000000000000000000000aaab": Account(
-            storage={0x00: 0x00}
-        ),
+        "0x000000000000000000000000000000000000aaab": Account(storage={0x00: 0x00}),
     }
     state_test(env=env, pre=pre, post=post, txs=[tx])
