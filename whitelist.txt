@@ -81,6 +81,7 @@ esbenp
 eth
 ethash
 ethereum
+EthereumJS
 ethereum's
 evaluatable
 evm
