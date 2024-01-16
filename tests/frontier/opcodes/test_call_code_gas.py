@@ -27,9 +27,9 @@ from ethereum_test_tools.vm.opcode import Opcodes as Op
 """
 CALL gas breakdowns: (https://www.evm.codes/#f1)
 memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost + empty_account_cost
-= 0 + 0 + 2600 + 9000 + 25000 = 36600
+= 0 + 0 + 2600 + 9000 + 0 = 11600
 """
-CALL_INSUFFICIENT_GAS = 0x8F28  # 36600
+CALL_INSUFFICIENT_GAS = 0x2D50  # 11600
 CALL_SUFFICIENT_GAS = CALL_INSUFFICIENT_GAS + (7 * 3)  # CALL + (7 * PUSH)
 
 """
