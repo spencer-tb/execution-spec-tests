@@ -24,6 +24,22 @@ from ethereum_test_tools import (
 )
 from ethereum_test_tools.vm.opcode import Opcodes as Op
 
+"""
+CALL gas breakdowns: (https://www.evm.codes/#f1)
+memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost + empty_account_cost
+= 0 + 0 + 2600 + 9000 + 25000 = 36600
+"""
+CALL_INSUFFICIENT_GAS = 0x8F28  # 36600
+CALL_SUFFICIENT_GAS = CALL_INSUFFICIENT_GAS + (7 * 3)  # CALL + (7 * PUSH)
+
+"""
+CALLCODE gas breakdowns: (https://www.evm.codes/#f2)
+memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost
+= 0 + 0 + 2600 + 9000 = 11600
+"""
+CALLCODE_INSUFFICIENT_GAS = 0x2D50  # 11600
+CALLCODE_SUFFICIENT_GAS = CALLCODE_INSUFFICIENT_GAS + (7 * 3)  # CALLCODE + (7 * PUSH)
+
 
 @dataclass(frozen=True)
 class Accounts:  # noqa: D101
@@ -33,13 +49,12 @@ class Accounts:  # noqa: D101
 
 
 @pytest.fixture
-def caller_code(caller_gas, caller_type):
+def caller_code(caller_gas: int, caller_type: Op) -> bytes:
     """
     Code to call the callee contract:
-        PUSH1 0x00
-        DUP1 * 4
+        PUSH1 0x00 * 5
         PUSH2 Accounts.callee
-        PUSH2 call_gas
+        PUSH2 caller_gas <- gas limit set for the CALL/CALLCODE execution
         CALL/CALLCODE
         PUSH1 0x00
         SSTORE
@@ -48,14 +63,13 @@ def caller_code(caller_gas, caller_type):
 
 
 @pytest.fixture
-def callee_code():
+def callee_code() -> bytes:
     """
     Code called by the caller contract:
         PUSH1 0x00 * 4
-        PUSH1 0x00
-        PUSH1 0x00
+        PUSH1 0x01
         PUSH2 Accounts.nonexistent_callee
-        PUSH2 0x1a90
+        PUSH2 0x1a90 <- gas available in the new CALL/CALLCODE frame, this value does not matter
         CALLCODE
     """
     return Op.CALLCODE(0x1A90, Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
@@ -63,9 +77,7 @@ def callee_code():
 
 @pytest.fixture
 def caller_tx() -> Transaction:
-    """
-    Transaction that calls the callee contract.
-    """
+    """Transaction that performs the call to the callee contract."""
     return Transaction(
         chain_id=0x01,
         nonce=0,
@@ -77,7 +89,7 @@ def caller_tx() -> Transaction:
 
 
 @pytest.fixture
-def pre(callee_code, caller_code) -> Dict[str, Account]:  # noqa: D103
+def pre(callee_code: bytes, caller_code: bytes) -> Dict[str, Account]:  # noqa: D103
     return {
         to_address(Accounts.callee): Account(
             balance=0x03,
@@ -96,26 +108,24 @@ def pre(callee_code, caller_code) -> Dict[str, Account]:  # noqa: D103
 
 
 @pytest.fixture
-def post(caller_gas) -> Dict[str, Account]:  # noqa: D103
+def post(sufficient_gas: bool) -> Dict[str, Account]:  # noqa: D103
     return {
-        to_address(Accounts.caller): Account(
-            storage={0x00: (0x01 if caller_gas >= 0x3D50 else 0x00)}
-        ),
+        to_address(Accounts.caller): Account(storage={0x00: 0x01 if sufficient_gas else 0x00}),
     }
 
 
 @pytest.mark.parametrize(
-    "caller_gas",
-    [0x2D5F, 0x3D50],
-    ids=["insufficient", "sufficient"],
-)
-@pytest.mark.parametrize(
-    "caller_type",
-    [Op.CALL, Op.CALLCODE],
+    "caller_type, caller_gas, sufficient_gas",
+    [
+        (Op.CALL, CALL_INSUFFICIENT_GAS, False),
+        (Op.CALL, CALL_SUFFICIENT_GAS, True),
+        (Op.CALLCODE, CALLCODE_INSUFFICIENT_GAS, False),
+        (Op.CALLCODE, CALLCODE_SUFFICIENT_GAS, True),
+    ],
 )
 @pytest.mark.valid_from("London")
 @pytest.mark.valid_until("Shanghai")
-def test_callcode_gas_with_call(
+def test_callcode_gas_value_transfer(
     state_test: StateTestFiller,
     pre: Dict[str, Account],
     caller_tx: Transaction,
