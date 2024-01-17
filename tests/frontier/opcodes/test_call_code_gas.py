@@ -25,20 +25,27 @@ from ethereum_test_tools import (
 from ethereum_test_tools.vm.opcode import Opcodes as Op
 
 """
+PUSH gas cost is 3.
+GAS gas cost is 2.
+We need 6 PUSH's and one GAS to fill the stack for both CALL & CALLCODE.
+"""
+PUSH_STACK_GAS = 6 * 3 + 2
+
+"""
 CALL gas breakdowns: (https://www.evm.codes/#f1)
 memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost + empty_account_cost
 = 0 + 0 + 2600 + 9000 + 25000 = 36600
 """
-CALL_INSUFFICIENT_GAS = 0x8EF8  # 36600
-CALL_SUFFICIENT_GAS = CALL_INSUFFICIENT_GAS + (6 * 3) + 2  # CALL + (6 * PUSH) + GAS
+CALL_GAS = 36600
+CALL_SUFFICIENT_GAS = CALL_GAS + PUSH_STACK_GAS
 
 """
 CALLCODE gas breakdowns: (https://www.evm.codes/#f2)
 memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost
 = 0 + 0 + 2600 + 9000 = 11600
 """
-CALLCODE_INSUFFICIENT_GAS = 0x2D50  # 11600
-CALLCODE_SUFFICIENT_GAS = CALLCODE_INSUFFICIENT_GAS + (6 * 3) + 2  # CALLCODE + (6 * PUSH) + GAS
+CALLCODE_GAS = 11600
+CALLCODE_SUFFICIENT_GAS = CALLCODE_GAS + PUSH_STACK_GAS
 
 
 @dataclass(frozen=True)
@@ -63,7 +70,7 @@ def caller_code(caller_gas: int) -> bytes:
 
 
 @pytest.fixture
-def callee_code(caller_type: Op) -> bytes:
+def callee_code(caller_opcode: Op) -> bytes:
     """
     Code called by the caller contract:
         PUSH1 0x00 * 4
@@ -72,7 +79,7 @@ def callee_code(caller_type: Op) -> bytes:
         GAS
         CALLCODE
     """
-    return caller_type(Op.GAS(), Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
+    return caller_opcode(Op.GAS(), Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
 
 
 @pytest.fixture
@@ -108,19 +115,19 @@ def pre(callee_code: bytes, caller_code: bytes) -> Dict[str, Account]:  # noqa: 
 
 
 @pytest.fixture
-def post(sufficient_gas: bool) -> Dict[str, Account]:  # noqa: D103
+def post(is_sufficient_gas: bool) -> Dict[str, Account]:  # noqa: D103
     return {
-        to_address(Accounts.caller): Account(storage={0x00: 0x01 if sufficient_gas else 0x00}),
+        to_address(Accounts.caller): Account(storage={0x00: 0x01 if is_sufficient_gas else 0x00}),
     }
 
 
 @pytest.mark.parametrize(
-    "caller_type, caller_gas, sufficient_gas",
+    "caller_opcode, caller_gas, is_sufficient_gas",
     [
-        (Op.CALL, CALL_INSUFFICIENT_GAS, False),
         (Op.CALL, CALL_SUFFICIENT_GAS, True),
-        (Op.CALLCODE, CALLCODE_INSUFFICIENT_GAS, False),
+        (Op.CALL, CALL_SUFFICIENT_GAS - 1, False),
         (Op.CALLCODE, CALLCODE_SUFFICIENT_GAS, True),
+        (Op.CALLCODE, CALLCODE_SUFFICIENT_GAS - 1, False),
     ],
 )
 @pytest.mark.valid_from("London")
