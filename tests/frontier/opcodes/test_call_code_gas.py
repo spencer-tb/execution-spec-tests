@@ -26,16 +26,17 @@ from ethereum_test_tools.vm.opcode import Opcodes as Op
 
 """
 PUSH gas cost is 3.
-We need 7 PUSH's to fill the stack for both CALL & CALLCODE.
+GAS gas cost is 2.
+We need 6 PUSH's and one GAS to fill the stack for both CALL & CALLCODE.
 """
-PUSH_STACK_GAS = 7 * 3
+PUSH_STACK_GAS = 6 * 3 + 2
 
 """
 CALL gas breakdowns: (https://www.evm.codes/#f1)
 memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost + empty_account_cost
-= 0 + 0 + 2600 + 9000 + 0 = 11600
+= 0 + 0 + 2600 + 9000 + 25000 = 36600
 """
-CALL_GAS = 11600
+CALL_GAS = 36600
 CALL_SUFFICIENT_GAS = CALL_GAS + PUSH_STACK_GAS
 
 """
@@ -55,7 +56,7 @@ class Accounts:  # noqa: D101
 
 
 @pytest.fixture
-def caller_code(caller_gas: int, caller_opcode: Op) -> bytes:
+def caller_code(caller_gas: int) -> bytes:
     """
     Code to call the callee contract:
         PUSH1 0x00 * 5
@@ -65,20 +66,20 @@ def caller_code(caller_gas: int, caller_opcode: Op) -> bytes:
         PUSH1 0x00
         SSTORE
     """
-    return Op.SSTORE(0, caller_opcode(caller_gas, Accounts.callee, 0, 0, 0, 0, 0))
+    return Op.SSTORE(0, Op.CALL(caller_gas, Accounts.callee, 0, 0, 0, 0, 0))
 
 
 @pytest.fixture
-def callee_code() -> bytes:
+def callee_code(caller_opcode: Op) -> bytes:
     """
     Code called by the caller contract:
         PUSH1 0x00 * 4
         PUSH1 0x01
         PUSH2 Accounts.nonexistent_callee
-        PUSH2 0x1a90 <- gas available in the new CALL/CALLCODE frame, this value does not matter
+        GAS
         CALLCODE
     """
-    return Op.CALLCODE(0x1A90, Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
+    return caller_opcode(Op.GAS(), Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
 
 
 @pytest.fixture
