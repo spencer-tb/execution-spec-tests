@@ -5,7 +5,7 @@ abstract: Tests the nested CALL/CALLCODE opcode gas consumption with a positive 
     https://github.com/ethereumjs/ethereumjs-monorepo/issues/3194.
 
     The issue pertains to the incorrect gas calculation for CALL/CALLCODE operations with a
-    positive value transfer, due to the pre-addition of the gas stipend (2300). This bug was
+    positive value transfer, due to the pre-addition of the gas stipend (2300) to the currently available gas instead of adding it to the new call frame. This bug was
     specific to the case where insufficient gas was provided for the CALL/CALLCODE operation.
     Due to the pre-addition of the stipend, the case for insufficient gas was not properly failing
     with an out-of-gas error.
