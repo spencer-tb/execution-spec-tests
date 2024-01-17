@@ -5,10 +5,11 @@ abstract: Tests the nested CALL/CALLCODE opcode gas consumption with a positive 
     https://github.com/ethereumjs/ethereumjs-monorepo/issues/3194.
 
     The issue pertains to the incorrect gas calculation for CALL/CALLCODE operations with a
-    positive value transfer, due to the pre-addition of the gas stipend (2300) to the currently available gas instead of adding it to the new call frame. This bug was
-    specific to the case where insufficient gas was provided for the CALL/CALLCODE operation.
-    Due to the pre-addition of the stipend to the currently available gas, the case for insufficient gas was not properly failing
-    with an out-of-gas error.
+    positive value transfer, due to the pre-addition of the gas stipend (2300) to the currently
+    available gas instead of adding it to the new call frame. This bug was specific to the case
+    where insufficient gas was provided for the CALL/CALLCODE operation. Due to the pre-addition
+    of the stipend to the currently available gas, the case for insufficient gas was not properly
+    failing with an out-of-gas error.
 
     Test setup: Given two smart contract accounts, 0x0A (caller) and 0x0B (callee):
     1) An arbitrary transaction calls into the contract 0x0A.
@@ -16,9 +17,9 @@ abstract: Tests the nested CALL/CALLCODE opcode gas consumption with a positive 
     3) Contract 0x0B then attempts a CALL/CALLCODE to a non-existent contract 0x0C,
        with a positive value transfer (activating the gas stipend).
     4) If the gas X provided by contract 0x0A to 0x0B is sufficient, contract 0x0B
-       will push 0x01 onto the stack after returning to the call frame in 0x0A. Otherwise, it should pushes 0x00, indicating the
-       insufficiency of gas X (for the bug in EthereumJS, the CALL/CALLCODE operation would return
-       0x01 due to the pre-addition of the gas stipend).
+       will push 0x01 onto the stack after returning to the call frame in 0x0A. Otherwise, it
+       should push 0x00, indicating the insufficiency of gas X (for the bug in EthereumJS, the
+       CALL/CALLCODE operation would return 0x01 due to the pre-addition of the gas stipend).
     5) The resulting stack value is saved into contract 0x0A's storage, allowing us to
        verify whether the provided gas was sufficient or insufficient.
 """
