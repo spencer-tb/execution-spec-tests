@@ -16,7 +16,7 @@ abstract: Tests the nested CALL/CALLCODE opcode gas consumption with a positive 
     3) Contract 0x0B then attempts a CALL/CALLCODE to a non-existent contract 0x0C,
        with a positive value transfer (activating the gas stipend).
     4) If the gas X provided by contract 0x0A to 0x0B is sufficient, contract 0x0B
-       will push 0x01 onto the stack. Otherwise, it should pushes 0x00, indicating the
+       will push 0x01 onto the stack after returning to the call frame in 0x0A. Otherwise, it should pushes 0x00, indicating the
        insufficiency of gas X (for the bug in EthereumJS, the CALL/CALLCODE operation would return
        0x01 due to the pre-addition of the gas stipend).
     5) The resulting stack value is saved into contract 0x0A's storage, allowing us to
