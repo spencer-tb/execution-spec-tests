@@ -27,10 +27,10 @@ from ethereum_test_tools.vm.opcode import Opcodes as Op
 """
 CALL gas breakdowns: (https://www.evm.codes/#f1)
 memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost + empty_account_cost
-= 0 + 0 + 2600 + 9000 + 0 = 11600
+= 0 + 0 + 2600 + 9000 + 25000 = 36600
 """
-CALL_INSUFFICIENT_GAS = 0x2D50  # 11600
-CALL_SUFFICIENT_GAS = CALL_INSUFFICIENT_GAS + (7 * 3)  # CALL + (7 * PUSH)
+CALL_INSUFFICIENT_GAS = 0x8EF8  # 36600
+CALL_SUFFICIENT_GAS = CALL_INSUFFICIENT_GAS + (6 * 3) + 2  # CALL + (6 * PUSH) + GAS
 
 """
 CALLCODE gas breakdowns: (https://www.evm.codes/#f2)
@@ -38,7 +38,7 @@ memory_exp_cost + code_exec_cost + address_access_cost + positive_value_cost
 = 0 + 0 + 2600 + 9000 = 11600
 """
 CALLCODE_INSUFFICIENT_GAS = 0x2D50  # 11600
-CALLCODE_SUFFICIENT_GAS = CALLCODE_INSUFFICIENT_GAS + (7 * 3)  # CALLCODE + (7 * PUSH)
+CALLCODE_SUFFICIENT_GAS = CALLCODE_INSUFFICIENT_GAS + (6 * 3) + 2  # CALLCODE + (6 * PUSH) + GAS
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class Accounts:  # noqa: D101
 
 
 @pytest.fixture
-def caller_code(caller_gas: int, caller_type: Op) -> bytes:
+def caller_code(caller_gas: int) -> bytes:
     """
     Code to call the callee contract:
         PUSH1 0x00 * 5
@@ -59,20 +59,20 @@ def caller_code(caller_gas: int, caller_type: Op) -> bytes:
         PUSH1 0x00
         SSTORE
     """
-    return Op.SSTORE(0, caller_type(caller_gas, Accounts.callee, 0, 0, 0, 0, 0))
+    return Op.SSTORE(0, Op.CALL(caller_gas, Accounts.callee, 0, 0, 0, 0, 0))
 
 
 @pytest.fixture
-def callee_code() -> bytes:
+def callee_code(caller_type: Op) -> bytes:
     """
     Code called by the caller contract:
         PUSH1 0x00 * 4
         PUSH1 0x01
         PUSH2 Accounts.nonexistent_callee
-        PUSH2 0x1a90 <- gas available in the new CALL/CALLCODE frame, this value does not matter
+        GAS
         CALLCODE
     """
-    return Op.CALLCODE(0x1A90, Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
+    return caller_type(Op.GAS(), Accounts.nonexistent_callee, 1, 0, 0, 0, 0)
 
 
 @pytest.fixture
