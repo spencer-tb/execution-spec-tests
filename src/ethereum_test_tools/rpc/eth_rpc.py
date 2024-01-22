@@ -7,7 +7,7 @@ from typing import Dict, List, Literal, Union
 from ..common import Address
 from .base_rpc import BaseRPC
 
-BlockNumberType = Union[int, Literal["latest", "earliest", "pending"]]
+BlockNumberType = Union[int, str, Literal["latest", "earliest", "pending"]]
 
 
 class EthRPC(BaseRPC):

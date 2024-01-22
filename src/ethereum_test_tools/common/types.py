@@ -845,23 +845,6 @@ class FixtureWithdrawal(Withdrawal):
     the beacon chain in the output fixture.
     """
 
-    index: NumberConvertible = field(
-        json_encoder=JSONEncoder.Field(
-            cast_type=ZeroPaddedHexNumber,
-        ),
-    )
-    validator: NumberConvertible = field(
-        json_encoder=JSONEncoder.Field(
-            name="validatorIndex",
-            cast_type=ZeroPaddedHexNumber,
-        ),
-    )
-    amount: NumberConvertible = field(
-        json_encoder=JSONEncoder.Field(
-            cast_type=ZeroPaddedHexNumber,
-        ),
-    )
-
     @classmethod
     def from_withdrawal(cls, w: Withdrawal) -> "FixtureWithdrawal":
         """

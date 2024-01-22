@@ -11,7 +11,6 @@ import json
 from typing import Dict, List, Mapping
 
 import pytest
-from hexbytes import HexBytes
 from hive.client import Client, ClientType
 from hive.testing import HiveTest
 
