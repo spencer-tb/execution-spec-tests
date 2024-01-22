@@ -3,8 +3,8 @@ Base JSON-RPC class and helper functions for EEST based hive simulators.
 """
 import time
 
-import jwt
 import requests
+from jwt import encode
 
 
 class BaseRPC:
@@ -24,7 +24,7 @@ class BaseRPC:
         Generates a JWT token based on the issued at timestamp and JWT secret.
         """
         iat = int(time.time())
-        return jwt.encode({"iat": iat}, self.jwt_secret, algorithm="HS256")
+        return encode({"iat": iat}, self.jwt_secret, algorithm="HS256")
 
     def post_request(self, method, params):
         """

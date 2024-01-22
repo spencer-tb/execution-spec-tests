@@ -357,6 +357,7 @@ subcommand
 substring
 substrings
 tf
+teardown
 testdir
 teststatus
 tmpdir
