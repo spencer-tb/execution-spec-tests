@@ -893,6 +893,59 @@ def test_sufficient_balance_blob_tx_pre_fund_tx(
 
 
 @pytest.mark.parametrize(
+    "tx_access_list",
+    [[], [AccessList(address=100, storage_keys=[100, 200])]],
+    ids=["no_access_list", "access_list"],
+)
+@pytest.mark.parametrize("tx_max_fee_per_gas", [7, 14])
+@pytest.mark.parametrize("tx_max_priority_fee_per_gas", [0, 7])
+@pytest.mark.parametrize("tx_value", [0, 1])
+@pytest.mark.parametrize(
+    "tx_calldata",
+    [b"", b"\x00", b"\x01"],
+    ids=["no_calldata", "single_zero_calldata"],
+)
+@pytest.mark.parametrize("tx_max_fee_per_blob_gas", [1, 100])
+@pytest.mark.parametrize(
+    "tx_gas", [500_000], ids=[""]
+)  # Increase gas to account for contract code
+@pytest.mark.parametrize("mid_tx_send_amount", [0, 100])
+@pytest.mark.valid_from("Cancun")
+def test_blob_gas_subtraction_tx(
+    state_test: StateTestFiller,
+    state_env: Environment,
+    pre: Dict,
+    txs: List[Transaction],
+    destination_account: str,
+    mid_tx_send_amount: int,
+):
+    """
+    Check that the blob gas fee for a transaction is subtracted from the sender balance before the
+    transaction is executed, including:
+
+    - Transactions with max fee equal or higher than current block base fee
+    - Transactions with and without priority fee
+    - Transactions with and without value
+    - Transactions with and without calldata
+    - Transactions with max fee per blob gas lower or higher than the priority fee
+    - Transactions where an externally owned account sends funds to the sender mid execution
+    """
+    assert len(txs) == 1
+    pre[destination_account] = Account(
+        balance=mid_tx_send_amount,
+        code=Op.SSTORE(0, Op.BALANCE(Op.ORIGIN))
+        + Op.CALL(Op.GAS, Op.ORIGIN, mid_tx_send_amount, 0, 0, 0, 0)
+        + Op.SSTORE(1, Op.BALANCE(Op.ORIGIN)),
+    )
+    state_test(
+        pre=pre,
+        post={},
+        tx=txs[0],
+        env=state_env,
+    )
+
+
+@pytest.mark.parametrize(
     "blobs_per_tx",
     all_valid_blob_combinations(),
 )
