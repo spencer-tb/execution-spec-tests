@@ -194,6 +194,31 @@ class Opcodes(Opcode, Enum):
 
     STOP = Opcode(0x00)
     ADD = Opcode(0x01, popped_stack_items=2, pushed_stack_items=1)
+    """
+    ADD(a, b) = c
+    ----
+
+    Description
+    ----
+    Addition operation
+
+    Inputs
+    ----
+    - a: first integer value to add
+    - b: second integer value to add
+
+    Outputs
+    ----
+    - c: integer result of the addition modulo 2**256
+
+    Fork
+    ----
+    Frontier
+
+    Gas
+    ----
+    3
+    """
     MUL = Opcode(0x02, popped_stack_items=2, pushed_stack_items=1)
     SUB = Opcode(0x03, popped_stack_items=2, pushed_stack_items=1)
     DIV = Opcode(0x04, popped_stack_items=2, pushed_stack_items=1)
