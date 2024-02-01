@@ -34,7 +34,9 @@ print(result.output)
 """
 import os
 import sys
+import tempfile
 import warnings
+from pathlib import Path
 
 import click
 import pytest
@@ -209,6 +211,21 @@ def consume_all(pytest_args, help_flag, pytest_help_flag):
     if not sys.stdin.isatty():  # the command is receiving input on stdin
         args.extend(["-s", "--input=stdin"])
     pytest.main(args)
+
+
+@click.command(context_settings=dict(ignore_unknown_options=True))
+@common_options
+def fill_and_consume_all(pytest_args, help_flag, pytest_help_flag):
+    """
+    Fill and consume test fixtures using all available consume commands.
+    """
+    args = handle_help_flags(pytest_args, help_flag, pytest_help_flag)
+
+    temp_dir = Path(tempfile.TemporaryDirectory().name) / "fixtures"
+    args += ["--output", temp_dir]
+    pytest.main(args)
+    consume_args = get_hive_flags_from_env()
+    pytest.main(["-c", "pytest-consume-all.ini", "--input", temp_dir, "-v"] + consume_args)
 
 
 consume.add_command(consume_all, name="all")
