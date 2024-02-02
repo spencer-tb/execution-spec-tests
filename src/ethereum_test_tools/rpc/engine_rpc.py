@@ -1,6 +1,7 @@
 """
 Ethereum `engine_X` JSON-RPC Engine API methods used within EEST based hive simulators.
 """
+
 from typing import Dict
 
 from ..common.json import to_json
@@ -32,6 +33,19 @@ class EngineRPC(BaseRPC):
         if version >= 3:
             formatted_json.append(engine_new_payload_json.get("expectedBlobVersionedHashes", None))
             formatted_json.append(engine_new_payload_json.get("parentBeaconBlockRoot", None))
+
+        # TODO: This is a temporary workaround to convert remove zero padding from withdrawals
+        withdrawals = formatted_json[0]["withdrawals"]
+        if len(withdrawals) > 0:
+            formatted_json[0]["withdrawals"] = [
+                {
+                    "index": hex(int(withdrawal["index"], 16)),
+                    "validatorIndex": hex(int(withdrawal["validatorIndex"], 16)),
+                    "address": withdrawal["address"],
+                    "amount": hex(int(withdrawal["amount"], 16)),
+                }
+                for withdrawal in withdrawals
+            ]
 
         return self.post_request(f"engine_newPayloadV{version}", formatted_json)
 
