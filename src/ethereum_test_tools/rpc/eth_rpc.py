@@ -7,7 +7,7 @@ from typing import Dict, List, Literal, Union
 from ..common import Address
 from .base_rpc import BaseRPC
 
-BlockNumberType = Union[int, str, Literal["latest", "earliest", "pending"]]
+BlockNumberType = Union[int, Literal["latest", "earliest", "pending"]]
 
 
 class EthRPC(BaseRPC):
@@ -20,25 +20,22 @@ class EthRPC(BaseRPC):
         """
         `eth_getBlockByNumber`: Returns information about a block by block number.
         """
-        if isinstance(block_number, int):
-            block_number = hex(block_number)
-        return self.post_request("eth_getBlockByNumber", [block_number, full_txs])
+        block = hex(block_number) if isinstance(block_number, int) else block_number
+        return self.post_request("eth_getBlockByNumber", [block, full_txs])
 
     def get_balance(self, address: str, block_number: BlockNumberType = "latest"):
         """
         `eth_getBalance`: Returns the balance of the account of given address.
         """
-        if isinstance(block_number, int):
-            block_number = hex(block_number)
-        return self.post_request("eth_getBalance", [address, block_number])
+        block = hex(block_number) if isinstance(block_number, int) else block_number
+        return self.post_request("eth_getBalance", [address, block])
 
     def get_transaction_count(self, address: Address, block_number: BlockNumberType = "latest"):
         """
         `eth_getTransactionCount`: Returns the number of transactions sent from an address.
         """
-        if isinstance(block_number, int):
-            block_number = hex(block_number)
-        return self.post_request("eth_getTransactionCount", [address, block_number])
+        block = hex(block_number) if isinstance(block_number, int) else block_number
+        return self.post_request("eth_getTransactionCount", [address, block])
 
     def get_storage_at(
         self, address: str, position: str, block_number: BlockNumberType = "latest"
@@ -46,9 +43,8 @@ class EthRPC(BaseRPC):
         """
         `eth_getStorageAt`: Returns the value from a storage position at a given address.
         """
-        if isinstance(block_number, int):
-            block_number = hex(block_number)
-        return self.post_request("eth_getStorageAt", [address, position, block_number])
+        block = hex(block_number) if isinstance(block_number, int) else block_number
+        return self.post_request("eth_getStorageAt", [address, position, block])
 
     def storage_at_keys(
         self, account: str, keys: List[str], block_number: BlockNumberType = "latest"
@@ -58,7 +54,7 @@ class EthRPC(BaseRPC):
         number.
         """
         if isinstance(block_number, int):
-            block_number = hex(block_number)
+            block_number
         results: Dict = {}
         for key in keys:
             storage_value = self.get_storage_at(account, key, block_number)
