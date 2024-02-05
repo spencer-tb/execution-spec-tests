@@ -81,8 +81,8 @@ def test_make_genesis(fork: Fork, hash: bytes):  # noqa: D103
         t8n,
         fork,
     )
-    assert genesis.hash is not None
-    assert genesis.hash.startswith(hash)
+    assert genesis.block_hash is not None
+    assert genesis.block_hash.startswith(hash)
 
 
 @pytest.mark.parametrize(
@@ -418,9 +418,9 @@ def test_fill_blockchain_valid_txs(
         ),
     }
 
-    # We start genesis with a baseFee of 1000
+    # We start genesis with a baseFeePerGas of 1000
     genesis_environment = Environment(
-        base_fee=1000,
+        base_fee_per_gas=1000,
         coinbase="0xba5e000000000000000000000000000000000000",
     )
 
@@ -767,9 +767,9 @@ def test_fill_blockchain_invalid_txs(
         ),
     }
 
-    # We start genesis with a baseFee of 1000
+    # We start genesis with a baseFeePerGas of 1000
     genesis_environment = Environment(
-        base_fee=1000,
+        base_fee_per_gas=1000,
         coinbase="0xba5e000000000000000000000000000000000000",
     )
 

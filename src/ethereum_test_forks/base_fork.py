@@ -1,6 +1,7 @@
 """
 Abstract base class for Ethereum forks
 """
+
 from abc import ABC, ABCMeta, abstractmethod
 from typing import Any, List, Mapping, Optional, Protocol, Type
 
@@ -55,7 +56,7 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
     # Header information abstract methods
     @classmethod
     @abstractmethod
-    def header_base_fee_required(cls, block_number: int = 0, timestamp: int = 0) -> bool:
+    def header_base_fee_per_gas_required(cls, block_number: int = 0, timestamp: int = 0) -> bool:
         """
         Returns true if the header must contain base fee
         """

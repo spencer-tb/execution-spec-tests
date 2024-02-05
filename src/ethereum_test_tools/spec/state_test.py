@@ -1,6 +1,7 @@
 """
 Ethereum state test spec definition and filler.
 """
+
 from copy import copy
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generator, List, Mapping, Optional, Tuple, Type
@@ -91,8 +92,8 @@ class StateTest(BaseTest):
             coinbase=Address(0),
             state_root=Hash(state_root),
             transactions_root=Hash(EmptyTrieRoot),
-            receipt_root=Hash(EmptyTrieRoot),
-            bloom=Bloom(0),
+            receipts_root=Hash(EmptyTrieRoot),
+            logs_bloom=Bloom(0),
             difficulty=ZeroPaddedHexNumber(
                 0x20000 if genesis_env.difficulty is None else genesis_env.difficulty
             ),
@@ -101,9 +102,9 @@ class StateTest(BaseTest):
             gas_used=0,
             timestamp=0,
             extra_data=Bytes([0]),
-            mix_digest=Hash(0),
+            prev_randao=Hash(0),
             nonce=HeaderNonce(0),
-            base_fee=ZeroPaddedHexNumber.or_none(genesis_env.base_fee),
+            base_fee_per_gas=ZeroPaddedHexNumber.or_none(genesis_env.base_fee_per_gas),
             blob_gas_used=ZeroPaddedHexNumber.or_none(genesis_env.blob_gas_used),
             excess_blob_gas=ZeroPaddedHexNumber.or_none(genesis_env.excess_blob_gas),
             withdrawals_root=Hash.or_none(
@@ -112,7 +113,7 @@ class StateTest(BaseTest):
             beacon_root=Hash.or_none(genesis_env.beacon_root),
         )
 
-        genesis_rlp, genesis.hash = genesis.build(
+        genesis_rlp, genesis.block_hash = genesis.build(
             txs=[],
             ommers=[],
             withdrawals=genesis_env.withdrawals,
@@ -180,7 +181,11 @@ class StateTest(BaseTest):
         header = FixtureHeader.collect(
             fork=fork, transition_tool_result=t8n_result, environment=self.env
         )
-        block, header.hash = header.build(txs=txs, ommers=[], withdrawals=self.env.withdrawals)
+        block, header.block_hash = header.build(
+            txs=txs,
+            ommers=[],
+            withdrawals=self.env.withdrawals,
+        )
 
         return Fixture(
             fork=network_info,
@@ -190,12 +195,12 @@ class StateTest(BaseTest):
                 FixtureBlock(
                     rlp=block,
                     block_header=header,
-                    txs=txs,
+                    transactions=txs,
                     ommers=[],
                     withdrawals=self.env.withdrawals,
                 )
             ],
-            last_block_hash=header.hash,
+            last_block_hash=header.block_hash,
             pre_state=pre,
             post_state=alloc_to_accounts(t8n_alloc),
             name=self.tag,
@@ -220,7 +225,7 @@ class StateTest(BaseTest):
         header = FixtureHeader.collect(
             fork=fork, transition_tool_result=t8n_result, environment=self.env
         )
-        _, header.hash = header.build(txs=txs, ommers=[], withdrawals=self.env.withdrawals)
+        _, header.block_hash = header.build(txs=txs, ommers=[], withdrawals=self.env.withdrawals)
         fixture_payload = FixtureEngineNewPayload.from_fixture_header(
             fork=fork,
             header=header,
