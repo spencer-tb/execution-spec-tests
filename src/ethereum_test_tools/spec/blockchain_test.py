@@ -93,17 +93,17 @@ class BlockchainTest(BaseTest):
             coinbase=Address(0),
             state_root=Hash(state_root),
             transactions_root=Hash(EmptyTrieRoot),
-            receipt_root=Hash(EmptyTrieRoot),
-            bloom=Bloom(0),
+            receipts_root=Hash(EmptyTrieRoot),
+            logs_bloom=Bloom(0),
             difficulty=ZeroPaddedHexNumber(0x20000 if env.difficulty is None else env.difficulty),
             number=0,
             gas_limit=ZeroPaddedHexNumber(env.gas_limit),
             gas_used=0,
             timestamp=0,
             extra_data=Bytes([0]),
-            mix_digest=Hash(0),
+            prev_randao=Hash(0),
             nonce=HeaderNonce(0),
-            base_fee=ZeroPaddedHexNumber.or_none(env.base_fee),
+            base_fee_per_gas=ZeroPaddedHexNumber.or_none(env.base_fee_per_gas),
             blob_gas_used=ZeroPaddedHexNumber.or_none(env.blob_gas_used),
             excess_blob_gas=ZeroPaddedHexNumber.or_none(env.excess_blob_gas),
             withdrawals_root=Hash.or_none(
@@ -112,7 +112,7 @@ class BlockchainTest(BaseTest):
             beacon_root=Hash.or_none(env.beacon_root),
         )
 
-        genesis_rlp, genesis.hash = genesis.build(
+        genesis_rlp, genesis.block_hash = genesis.build(
             txs=[],
             ommers=[],
             withdrawals=env.withdrawals,
@@ -191,7 +191,7 @@ class BlockchainTest(BaseTest):
             # transition tool processing.
             header = header.join(block.rlp_modifier)
 
-        rlp, header.hash = header.build(
+        rlp, header.block_hash = header.build(
             txs=txs,
             ommers=[],
             withdrawals=env.withdrawals,
@@ -230,7 +230,7 @@ class BlockchainTest(BaseTest):
 
         alloc = to_json(pre)
         env = Environment.from_parent_header(genesis)
-        head = genesis.hash if genesis.hash is not None else Hash(0)
+        head = genesis.block_hash if genesis.block_hash is not None else Hash(0)
 
         for block in self.blocks:
             header, rlp, txs, new_alloc, new_env = self.generate_block_data(
@@ -246,7 +246,7 @@ class BlockchainTest(BaseTest):
                             rlp=rlp,
                             block_header=header,
                             block_number=Number(header.number),
-                            txs=txs,
+                            transactions=txs,
                             ommers=[],
                             withdrawals=new_env.withdrawals,
                         ),
@@ -254,7 +254,7 @@ class BlockchainTest(BaseTest):
                     # Update env, alloc and last block hash for the next block.
                     alloc = new_alloc
                     env = new_env.apply_new_parent(header)
-                    head = header.hash if header.hash is not None else Hash(0)
+                    head = header.block_hash if header.block_hash is not None else Hash(0)
                 else:
                     fixture_blocks.append(
                         InvalidFixtureBlock(
@@ -262,7 +262,7 @@ class BlockchainTest(BaseTest):
                             expected_exception=block.exception,
                             rlp_decoded=FixtureBlock(
                                 block_header=header,
-                                txs=txs,
+                                transactions=txs,
                                 ommers=[],
                                 withdrawals=new_env.withdrawals,
                             ),
