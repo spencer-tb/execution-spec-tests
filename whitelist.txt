@@ -50,6 +50,7 @@ caller
 callvalue
 cancun
 cd
+CFI
 chainid
 changelog
 chfast
@@ -98,6 +99,8 @@ dunder
 EEST
 eip
 eip3540
+P6800
+P7692
 eips
 EIPs
 eip6110
@@ -225,6 +228,7 @@ mixhash
 mkdocs
 mkdocstrings
 msm
+mpt
 mypy
 namespace
 nav
@@ -340,6 +344,7 @@ textwrap
 tf
 ThreeHrSleep
 time15k
+Time32
 timestamp
 todo
 toml
@@ -367,7 +372,9 @@ v1
 validator
 validators
 venv
+verkle
 visualstudio
+vkt
 vm
 vscode
 vv

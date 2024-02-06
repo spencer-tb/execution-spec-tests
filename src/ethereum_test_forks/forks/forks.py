@@ -188,6 +188,24 @@ class Frontier(BaseFork, solc_name="homestead"):
         """
         return {}
 
+    @classmethod
+    def environment_verkle_conversion_starts(
+        cls, block_number: int = 0, timestamp: int = 0
+    ) -> bool:
+        """
+        Returns true if the fork starts the verkle conversion process.
+        """
+        return False
+
+    @classmethod
+    def environment_verkle_conversion_completed(
+        cls, block_number: int = 0, timestamp: int = 0
+    ) -> bool:
+        """
+        Returns true if verkle conversion must have been completed by this fork.
+        """
+        return False
+
 
 class Homestead(Frontier):
     """
@@ -393,6 +411,54 @@ class Shanghai(Paris):
         Starting at Shanghai, new payload calls must use version 2
         """
         return 2
+
+    @classmethod
+    def pre_allocation_blockchain(cls) -> Mapping:
+        """
+        Prague requires pre-allocation of the history storage contract for EIP-2935 on blockchain
+        type tests.
+        """
+        new_allocation = {
+            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE: {
+                "nonce": 1,
+                "code": (
+                    "0x60203611603157600143035f35116029575f35612000014311602957612000"
+                    "5f3506545f5260205ff35b5f5f5260205ff35b5f5ffd00"
+                ),
+            }
+        }
+        return new_allocation | super(Shanghai, cls).pre_allocation_blockchain()
+
+
+# TODO: Just a small hack to fill all tests using the transition
+class ShanghaiToPragueAtTime32(Shanghai):
+    """
+    Shanghai to Prague transition at Timestamp 32
+    """
+
+    @classmethod
+    def is_deployed(cls) -> bool:
+        """
+        Flags that the fork has not been deployed to mainnet; it is under active
+        development.
+        """
+        return False
+
+    @classmethod
+    def solc_min_version(cls) -> Version:
+        """
+        Returns the minimum version of solc that supports this fork.
+        """
+        return Version.parse("1.0.0")  # set a high version; currently unknown
+
+    @classmethod
+    def environment_verkle_conversion_starts(
+        cls, block_number: int = 0, timestamp: int = 32
+    ) -> bool:
+        """
+        Verkle conversion starts in this fork.
+        """
+        return True
 
 
 class Cancun(Shanghai):
@@ -604,7 +670,42 @@ class Prague(Cancun):
         return 3
 
 
-class CancunEIP7692(  # noqa: SC200
+class ShanghaiEIP6800(
+    Shanghai,
+    transition_tool_name="Prague",  # Geth enables (only) Verkle at Prague
+    blockchain_test_network_name="Prague",  # Geth enables (only) Verkle at Prague
+    solc_name="shanghai",
+):
+    """
+    Shanghai + EIP-6800 (Verkle) fork
+    """
+
+    @classmethod
+    def is_deployed(cls) -> bool:
+        """
+        Flags that the fork has not been deployed to mainnet; it is under active
+        development.
+        """
+        return False
+
+    @classmethod
+    def solc_min_version(cls) -> Version:
+        """
+        Returns the minimum version of solc that supports this fork.
+        """
+        return Version.parse("1.0.0")  # set a high version; currently unknown
+
+    @classmethod
+    def environment_verkle_conversion_starts(
+        cls, block_number: int = 0, timestamp: int = 0
+    ) -> bool:
+        """
+        Verkle conversion starts in this fork.
+        """
+        return True
+
+
+class CancunEIP7692(
     Cancun,
     transition_tool_name="Prague",  # Evmone enables (only) EOF at Prague
     blockchain_test_network_name="Prague",  # Evmone enables (only) EOF at Prague

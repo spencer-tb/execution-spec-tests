@@ -12,6 +12,7 @@ from typing import (
     Generic,
     Iterator,
     List,
+    Optional,
     Sequence,
     SupportsBytes,
     Type,
@@ -215,9 +216,9 @@ class Storage(RootModel[Dict[StorageKeyValueType, StorageKeyValueType]]):
         value: StorageKeyValueTypeConvertible | StorageKeyValueType,
     ):  # noqa: SC200
         """Sets an item in the storage"""
-        self.root[
-            StorageKeyValueTypeAdapter.validate_python(key)
-        ] = StorageKeyValueTypeAdapter.validate_python(value)
+        self.root[StorageKeyValueTypeAdapter.validate_python(key)] = (
+            StorageKeyValueTypeAdapter.validate_python(value)
+        )
 
     def __delitem__(self, key: StorageKeyValueTypeConvertible | StorageKeyValueType):
         """Deletes an item from the storage"""
@@ -304,6 +305,7 @@ class Storage(RootModel[Dict[StorageKeyValueType, StorageKeyValueType]]):
         if other is None:
             other = Storage({})
         for key in self.keys() & other.keys():
+            print(key, self[key], other[key])
             if self[key] != other[key]:
                 raise Storage.KeyValueMismatch(
                     address=address, key=key, want=self[key], got=other[key]
@@ -719,6 +721,14 @@ class Environment(EnvironmentGeneric[Number]):
     parent_blob_gas_used: Number | None = Field(None)
     parent_excess_blob_gas: Number | None = Field(None)
     parent_beacon_block_root: Hash | None = Field(None)
+    verkle_conversion_address: Address | None = Field(None, alias="currentConversionAddress")
+    verkle_conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
+    verkle_conversion_started: bool | None = Field(None, alias="currentConversionStarted")
+    verkle_conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
+    verkle_conversion_storage_processed: bool | None = Field(
+        None,
+        alias="currentConversionStorageProcessed",
+    )
 
     block_hashes: Dict[Number, Hash] = Field(default_factory=dict)
     ommers: List[Hash] = Field(default_factory=list)
@@ -785,7 +795,39 @@ class Environment(EnvironmentGeneric[Number]):
         ):
             updated_values["parent_beacon_block_root"] = 0
 
+        if fork.environment_verkle_conversion_starts(number, timestamp):
+            if self.verkle_conversion_ended:
+                # Conversion is marked as completed if this is the genesis block, or we are
+                # past the conversion end fork.
+                updated_values["verkle_conversion_ended"] = (
+                    number == 0 or fork.environment_verkle_conversion_completed(number, timestamp)
+                )
+
         return self.copy(**updated_values)
+
+    def update_from_result(self, result: "Result") -> "Environment":
+        """
+        Updates the environment with the result of a transition tool execution.
+        """
+        if result.verkle_conversion_address:
+            self.verkle_conversion_address = result.verkle_conversion_address
+        if result.verkle_conversion_slot_hash:
+            self.verkle_conversion_slot_hash = result.verkle_conversion_slot_hash
+        # Boolean fields required to check if not None so we actually update them even when False
+        if result.verkle_conversion_started is not None:
+            conversion_started = result.verkle_conversion_started
+            assert isinstance(conversion_started, bool)
+            self.verkle_conversion_started = result.verkle_conversion_started
+        if result.verkle_conversion_ended is not None:
+            conversion_ended = result.verkle_conversion_ended
+            assert isinstance(conversion_ended, bool)
+            self.verkle_conversion_ended = result.verkle_conversion_ended
+        if result.verkle_conversion_storage_processed is not None:
+            conversion_storage_processed = result.verkle_conversion_storage_processed
+            assert isinstance(conversion_storage_processed, bool)
+            self.verkle_conversion_storage_processed = conversion_storage_processed
+
+        return self
 
 
 class AccessList(CamelModel):
@@ -1447,11 +1489,34 @@ class Result(CamelModel):
     deposit_requests: List[DepositRequest] | None = None
     withdrawal_requests: List[WithdrawalRequest] | None = None
 
+    # Verkle tree related: TODO
+    verkle_conversion_address: Address | None = Field(None, alias="currentConversionAddress")
+    verkle_conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
+    verkle_conversion_started: bool | None = Field(None, alias="currentConversionStarted")
+    verkle_conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
+    verkle_conversion_storage_processed: bool | None = Field(
+        None, alias="currentConversionStorageProcessed"
+    )
+
+
+class VerkleTree(RootModel[Dict[str, str | None]]):
+    """
+    Verkle tree model. TODO refine this model.
+    """
+
+    root: Dict[str, str | None] = Field(
+        default_factory=dict,
+        validate_default=True,
+    )
+
 
 class TransitionToolOutput(CamelModel):
     """
-    Transition tool output
+    Transition tool output model for t8n validation.
     """
 
     alloc: Alloc
     result: Result
+
+    # vkt is optional as only valid from Osaka.
+    vkt: Optional[VerkleTree] = None
