@@ -717,6 +717,11 @@ class Environment(EnvironmentGeneric[Number]):
     parent_blob_gas_used: Number | None = Field(None)
     parent_excess_blob_gas: Number | None = Field(None)
     parent_beacon_block_root: Hash | None = Field(None)
+    verkle_conversion_address: Address | None = Field(None)
+    verkle_conversion_slot_hash: Hash | None = Field(None)
+    verkle_conversion_started: bool | None = Field(None)
+    verkle_conversion_ended: bool | None = Field(None)
+    verkle_conversion_storage_processed: bool | None = Field(None)
 
     block_hashes: Dict[Number, Hash] = Field(default_factory=dict)
     ommers: List[Hash] = Field(default_factory=list)
@@ -783,7 +788,37 @@ class Environment(EnvironmentGeneric[Number]):
         ):
             updated_values["parent_beacon_block_root"] = 0
 
+        if fork.environment_verkle_conversion_information_required(number, timestamp):
+            if updated_values["verkle_conversion_address"] is None:
+                updated_values["verkle_conversion_address"] = 0
+            if updated_values["verkle_conversion_slot_hash"] is None:
+                updated_values["verkle_conversion_slot_hash"] = 0
+            if updated_values["verkle_conversion_started"] is None:
+                updated_values["verkle_conversion_started"] = False
+            if updated_values["verkle_conversion_ended"] is None:
+                updated_values["verkle_conversion_ended"] = False
+            if updated_values["verkle_conversion_storage_processed"] is None:
+                updated_values["verkle_conversion_storage_processed"] = False
+
         return self.copy(**updated_values)
+
+    def update_from_result(self, transition_tool_result: Dict[str, str]) -> "Environment":
+        """
+        Updates the environment with the result of a transition tool execution.
+        """
+        if "currentConversionAddress" in transition_tool_result:
+            self.verkle_conversion_address = transition_tool_result["currentConversionAddress"]
+        if "currentConversionSlotHash" in transition_tool_result:
+            self.verkle_conversion_slot_hash = transition_tool_result["currentConversionSlotHash"]
+        if "currentConversionStarted" in transition_tool_result:
+            self.verkle_conversion_started = transition_tool_result["currentConversionStarted"]
+        if "currentConversionEnded" in transition_tool_result:
+            self.verkle_conversion_ended = transition_tool_result["currentConversionEnded"]
+        if "currentConversionStorageProcessed" in transition_tool_result:
+            self.verkle_conversion_storage_processed = transition_tool_result[
+                "currentConversionStorageProcessed"
+            ]
+        return self
 
 
 class AccessList(CamelModel):

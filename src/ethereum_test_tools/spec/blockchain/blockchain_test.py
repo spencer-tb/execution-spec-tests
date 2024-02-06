@@ -134,9 +134,9 @@ class BlockchainTest(BaseTest):
             base_fee_per_gas=env.base_fee_per_gas,
             blob_gas_used=env.blob_gas_used,
             excess_blob_gas=env.excess_blob_gas,
-            withdrawals_root=Withdrawal.list_root(env.withdrawals)
-            if env.withdrawals is not None
-            else None,
+            withdrawals_root=(
+                Withdrawal.list_root(env.withdrawals) if env.withdrawals is not None else None
+            ),
             parent_beacon_block_root=env.parent_beacon_block_root,
         )
 
@@ -248,7 +248,12 @@ class BlockchainTest(BaseTest):
             # transition tool processing.
             header = header.join(block.rlp_modifier)
 
-        return header, txs, transition_tool_output.alloc, env
+        return (
+            header,
+            txs,
+            transition_tool_output.alloc,
+            env.update_from_result(transition_tool_output.result),
+        )
 
     def network_info(self, fork: Fork, eips: Optional[List[int]] = None):
         """
@@ -304,9 +309,11 @@ class BlockchainTest(BaseTest):
                     header=header,
                     txs=[FixtureTransaction.from_transaction(tx) for tx in txs],
                     ommers=[],
-                    withdrawals=[FixtureWithdrawal.from_withdrawal(w) for w in new_env.withdrawals]
-                    if new_env.withdrawals is not None
-                    else None,
+                    withdrawals=(
+                        [FixtureWithdrawal.from_withdrawal(w) for w in new_env.withdrawals]
+                        if new_env.withdrawals is not None
+                        else None
+                    ),
                 ).with_rlp(txs=txs)
                 if block.exception is None:
                     fixture_blocks.append(fixture_block)
