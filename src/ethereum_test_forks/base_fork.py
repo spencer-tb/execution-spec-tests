@@ -205,6 +205,22 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
         """
         pass
 
+    @classmethod
+    @abstractmethod
+    def environment_verkle_conversion_information_required(
+        cls, block_number: int = 0, timestamp: int = 0
+    ) -> bool:
+        """
+        Returns true if the environment must contain the verkle conversion information, which
+        includes:
+        - Conversion address
+        - Conversion slot hash
+        - Conversion started
+        - Conversion ended
+        - Conversion storage processed
+        """
+        pass
+
     # Engine API information abstract methods
     @classmethod
     @abstractmethod

@@ -168,6 +168,15 @@ class Frontier(BaseFork, solc_name="homestead"):
         """
         return {}
 
+    @classmethod
+    def environment_verkle_conversion_information_required(
+        cls, block_number: int = 0, timestamp: int = 0
+    ) -> bool:
+        """
+        Returns true if the environment must contain verkle conversion information
+        """
+        return False
+
 
 class Homestead(Frontier):
     """
@@ -474,3 +483,12 @@ class Prague(Cancun):
         Returns the minimum version of solc that supports this fork.
         """
         return Version.parse("1.0.0")  # set a high version; currently unknown
+
+    @classmethod
+    def environment_verkle_conversion_information_required(
+        cls, block_number: int = 0, timestamp: int = 0
+    ) -> bool:
+        """
+        Returns true if the environment must contain verkle conversion information
+        """
+        return True
