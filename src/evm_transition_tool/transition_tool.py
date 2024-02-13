@@ -309,6 +309,7 @@ class TransitionTool:
         txs: Any
         env: Any
         fork_name: str
+        mpt_alloc: Any = None
         chain_id: int = field(default=1)
         reward: int = field(default=0)
 
@@ -330,6 +331,8 @@ class TransitionTool:
             "env": t8n_data.env,
             "txs": t8n_data.txs,
         }
+        if t8n_data.mpt_alloc is not None:
+            input_contents["allocMPT"] = t8n_data.mpt_alloc
 
         input_paths = {
             k: os.path.join(temp_dir.name, "input", f"{k}.json") for k in input_contents.keys()
@@ -366,6 +369,9 @@ class TransitionTool:
             "--state.chainid",
             str(t8n_data.chain_id),
         ]
+
+        if t8n_data.mpt_alloc is not None:
+            args.extend(["--input.allocMPT", input_paths["allocMPT"]])
 
         if self.trace:
             args.append("--trace")
@@ -446,6 +452,8 @@ class TransitionTool:
             "txs": t8n_data.txs,
             "env": t8n_data.env,
         }
+        if t8n_data.mpt_alloc is not None:
+            stdin["allocMPT"] = t8n_data.mpt_alloc
 
         result = subprocess.run(
             args,
@@ -555,6 +563,7 @@ class TransitionTool:
         txs: Any,
         env: Any,
         fork_name: str,
+        mpt_alloc: Any = None,
         chain_id: int = 1,
         reward: int = 0,
         eips: Optional[List[int]] = None,
@@ -571,7 +580,13 @@ class TransitionTool:
         if int(env["currentNumber"], 0) == 0:
             reward = -1
         t8n_data = TransitionTool.TransitionToolData(
-            alloc=alloc, txs=txs, env=env, fork_name=fork_name, chain_id=chain_id, reward=reward
+            alloc=alloc,
+            txs=txs,
+            env=env,
+            fork_name=fork_name,
+            chain_id=chain_id,
+            reward=reward,
+            mpt_alloc=mpt_alloc,
         )
 
         if self.t8n_use_stream:
