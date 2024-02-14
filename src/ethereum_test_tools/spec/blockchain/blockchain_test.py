@@ -171,16 +171,6 @@ class BlockchainTest(BaseTest):
         env = block.set_environment(previous_env)
         env = env.set_fork_requirements(fork)
 
-        if (
-            fork.fork_at(env.number, env.timestamp) == Prague
-            and fork.fork_at(previous_env.number, previous_env.timestamp) != Prague
-        ):
-            # Transitioning to verkle trees, we need to update the MPT allocation.
-            assert (
-                mpt_alloc is None
-            ), "MPT allocation should not be set when transitioning to Prague"
-            mpt_alloc = previous_alloc
-
         txs = [tx.with_signature_and_sender() for tx in block.txs]
 
         if failing_tx_count := len([tx for tx in txs if tx.error]) > 0:
@@ -259,6 +249,23 @@ class BlockchainTest(BaseTest):
             # Modify any parameter specified in the `rlp_modifier` after
             # transition tool processing.
             header = header.join(block.rlp_modifier)
+
+        env.update_from_result(transition_tool_output.result)
+        rlp, header.hash = header.build(
+            txs=txs,
+            ommers=[],
+            withdrawals=env.withdrawals,
+        )
+
+        if (
+            fork.fork_at(env.number, env.timestamp) == Prague
+            and fork.fork_at(previous_env.number, previous_env.timestamp) != Prague
+        ):
+            # Transitioning to verkle trees, we need to init the MPT allocation.
+            assert (
+                mpt_alloc is None
+            ), "MPT allocation should not be set when transitioning to Prague"
+            mpt_alloc = previous_alloc
 
         env.update_from_result(transition_tool_output.result)
 
