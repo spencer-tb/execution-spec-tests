@@ -57,6 +57,16 @@ jobs:
         run: |
           echo -e "ref: $GITHUB_REF \ncommit: $GITHUB_SHA\nbuild: $(date +"%Y-%m-%dT%H:%M:%SZ")" \
           > fixtures/info.txt
+      - name: Create fixtures tree hash file
+        shell: bash
+        run: |
+          dfx --generate-fixtures-tree-only
+          mv fixtures_tree.json ${{ matrix.name }}_tree.json
+      - name: Upload fixtures tree hash file as an artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.name }}-tree-hash
+          path: ${{ matrix.name }}_tree.json
       - name: Tar fixtures output
         shell: bash
         run: |
@@ -77,7 +87,9 @@ jobs:
       - name: Draft Release
         uses: softprops/action-gh-release@v1
         with:
-          files: './**'
+          files: |
+            fixtures.tar.gz
+            fixtures_develop.tar.gz
           draft: true
           generate_release_notes: true
           fail_on_unmatched_files: true
