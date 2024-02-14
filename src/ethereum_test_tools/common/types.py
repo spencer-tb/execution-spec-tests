@@ -213,9 +213,9 @@ class Storage(RootModel[Dict[StorageKeyValueType, StorageKeyValueType]]):
         value: StorageKeyValueTypeConvertible | StorageKeyValueType,
     ):  # noqa: SC200
         """Sets an item in the storage"""
-        self.root[
-            StorageKeyValueTypeAdapter.validate_python(key)
-        ] = StorageKeyValueTypeAdapter.validate_python(value)
+        self.root[StorageKeyValueTypeAdapter.validate_python(key)] = (
+            StorageKeyValueTypeAdapter.validate_python(value)
+        )
 
     def __delitem__(self, key: StorageKeyValueTypeConvertible | StorageKeyValueType):
         """Deletes an item from the storage"""
@@ -788,21 +788,17 @@ class Environment(EnvironmentGeneric[Number]):
         ):
             updated_values["parent_beacon_block_root"] = 0
 
-        if fork.environment_verkle_conversion_information_required(number, timestamp):
-            if updated_values["verkle_conversion_address"] is None:
-                updated_values["verkle_conversion_address"] = 0
-            if updated_values["verkle_conversion_slot_hash"] is None:
-                updated_values["verkle_conversion_slot_hash"] = 0
-            if updated_values["verkle_conversion_started"] is None:
-                updated_values["verkle_conversion_started"] = False
+        if fork.environment_verkle_conversion_starts(number, timestamp):
             if updated_values["verkle_conversion_ended"] is None:
-                updated_values["verkle_conversion_ended"] = False
-            if updated_values["verkle_conversion_storage_processed"] is None:
-                updated_values["verkle_conversion_storage_processed"] = False
+                # Conversion is marked as completed if this is the genesis block, or we are
+                # past the conversion end fork.
+                updated_values["verkle_conversion_ended"] = (
+                    number == 0 or fork.environment_verkle_conversion_completed(number, timestamp)
+                )
 
         return self.copy(**updated_values)
 
-    def update_from_result(self, transition_tool_result: Dict[str, str]) -> "Environment":
+    def update_from_result(self, transition_tool_result: Dict[str, Any]) -> "Environment":
         """
         Updates the environment with the result of a transition tool execution.
         """
@@ -811,13 +807,21 @@ class Environment(EnvironmentGeneric[Number]):
         if "currentConversionSlotHash" in transition_tool_result:
             self.verkle_conversion_slot_hash = transition_tool_result["currentConversionSlotHash"]
         if "currentConversionStarted" in transition_tool_result:
-            self.verkle_conversion_started = transition_tool_result["currentConversionStarted"]
+            conversion_started = transition_tool_result["currentConversionStarted"]
+            assert conversion_started is not None and isinstance(conversion_started, bool)
+            self.verkle_conversion_started = conversion_started
         if "currentConversionEnded" in transition_tool_result:
+            conversion_ended = transition_tool_result["currentConversionEnded"]
+            assert conversion_ended is not None and isinstance(conversion_ended, bool)
             self.verkle_conversion_ended = transition_tool_result["currentConversionEnded"]
         if "currentConversionStorageProcessed" in transition_tool_result:
-            self.verkle_conversion_storage_processed = transition_tool_result[
+            conversion_storage_processed = transition_tool_result[
                 "currentConversionStorageProcessed"
             ]
+            assert conversion_storage_processed is not None and isinstance(
+                conversion_storage_processed, bool
+            )
+            self.verkle_conversion_storage_processed = conversion_storage_processed
         return self
 
 
