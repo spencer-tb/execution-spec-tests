@@ -69,6 +69,7 @@ datastructures
 delitem
 dev
 devnet
+dfx
 difficulty
 dir
 dirname
@@ -193,6 +194,7 @@ pdb
 petersburg
 png
 Pomerantz
+posix
 ppa
 ppas
 pre
