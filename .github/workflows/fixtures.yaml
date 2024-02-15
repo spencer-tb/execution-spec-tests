@@ -64,13 +64,13 @@ jobs:
         run: |
           tar -czvf ${{ matrix.name }}.tar.gz ./fixtures
       - name: Upload fixtures tar artifact
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}-artifacts
           path: |
             ${{ matrix.name }}.tar.gz
       - name: Upload separate fixtures tree hash artifact
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}-artifacts
           path: |
