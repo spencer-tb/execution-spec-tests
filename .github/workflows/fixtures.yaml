@@ -66,13 +66,13 @@ jobs:
       - name: Upload fixtures tar artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.name }}-artifacts
+          name: ${{ matrix.name }}
           path: |
             ${{ matrix.name }}.tar.gz
       - name: Upload separate fixtures tree hash artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.name }}-artifacts
+          name: ${{ matrix.name }}_hash_tree
           path: |
             ${{ matrix.name }}_hash_tree.json
   release:
