@@ -30,17 +30,10 @@ jobs:
           echo "NEW_BRANCH=release-${{ github.event.release.tag_name }}" >> $GITHUB_ENV
           echo "COMMIT_MSG=\"feat(docs|fw): release EEST ${{ github.event.release.tag_name }}\"" >> $GITHUB_ENV
 
-      - name: Create new branch and update version in setup.cfg
+      - name: Update version in setup.cfg
         run: |
-          git checkout -b $NEW_BRANCH
           sed -i "s/^version = .*/version = $NEW_VERSION/" setup.cfg
           git add setup.cfg
-          git commit -m "$COMMIT_MSG"
-          git push --set-upstream origin $NEW_BRANCH
-
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
