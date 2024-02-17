@@ -36,13 +36,11 @@ jobs:
           git push --set-upstream origin $NEW_BRANCH
 
       - name: Create pull request
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --title "$COMMIT_MSG" \
-            --body "This PR updates the framework version in setup.cfg to $NEW_VERSION." \
-            --head $NEW_BRANCH \
-            --base main \
-            --repo ${{ github.repository }} \
-
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.NEW_BRANCH }}
+          commit-message: "Release EEST ${{ env.NEW_VERSION }}"
+          title: "feat(docs|fw): release EEST ${{ env.NEW_VERSION }}"
+          body: "This PR updates the framework version in setup.cfg to ${{ env.NEW_VERSION }}."
+          base: main
