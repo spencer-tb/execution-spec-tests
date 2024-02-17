@@ -39,12 +39,13 @@ jobs:
           # Replace unreleased link with the new release information
           RELEASE_DATE=$(date +'%Y-%m-%d')
           ESCAPED_LINK="https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}"
-          RELEASE_NAME=$(gh release view ${NEW_VERSION} --json body -q '.body' | head -n 1)
+          RELEASE_NAME=$(gh release view ${NEW_VERSION} --json body -q '.body' | grep '^#' | head -n 1 | sed 's/^# //')
           sed -i "s/^## 🔜 \[Unreleased\].*/## 🔜 [${NEW_VERSION}](${ESCAPED_LINK}) - ${RELEASE_DATE}: ${RELEASE_NAME}/" docs/CHANGELOG.md
 
           # Append template for the next unreleased section
-          TEMPLATE=$(tail -n +5 docs/changelog_section_template.md)
-          printf "\n%s\n" "$TEMPLATE" >> docs/CHANGELOG.md
+          tail -n +5 docs/changelog_section_template.md > temp_template.md
+          sed -i '/\*\*Key:\*\*/ r temp_template.md' docs/CHANGELOG.md
+          rm temp_template.md
 
           git add docs/CHANGELOG.md
 
