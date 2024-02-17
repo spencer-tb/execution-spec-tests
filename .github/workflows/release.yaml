@@ -24,22 +24,21 @@ jobs:
         run: |
           echo "NEW_VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
           echo "NEW_BRANCH=release-${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          echo "COMMIT_MSG=\"feat(docs|fw): release EEST ${{ github.event.release.tag_name }}\"" >> $GITHUB_ENV
 
       - name: Create new branch and update version in setup.cfg
         run: |
           git checkout -b $NEW_BRANCH
-          # Update the version in setup.cfg
           sed -i "s/^version = .*/version = $NEW_VERSION/" setup.cfg
           git add setup.cfg
-          git commit -m "feat(docs|fw): release EEST $NEW_VERSION"
+          git commit -m "$COMMIT_MSG"
           git push --set-upstream origin $NEW_BRANCH
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.NEW_BRANCH }}
-          commit-message: "Release EEST $NEW_VERSION"
-          title: "feat(docs|fw): release EEST $NEW_VERSION"
-          body: "This PR updates the framework version in setup.cfg to $NEW_VERSION."
-          base: main
+        run: |
+          gh pr create \
+            --title "$COMMIT_MSG" \
+            --body "This PR updates the framework version in setup.cfg to $NEW_VERSION." \
+            --head $NEW_BRANCH \
+            --base main \
+            --repo ${{ github.repository }}
