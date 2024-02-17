@@ -36,14 +36,15 @@ jobs:
         env:
           RELEASE_DATE: $(date +'%Y-%m-%d')
         run: |
-          ESCAPED_LINK="https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}"
-          RELEASE_NAME=$(gh release view ${NEW_VERSION} --json body -q '.body' | sed -n '1p')
-
           # Replace unreleased link with the new release information
-          sed -i "s/^## 🔜 \[Unreleased\].*/## 🔜 [${NEW_VERSION}](https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}) - $(date +%Y-%m-%d): ${RELEASE_NAME}/" docs/CHANGELOG.md
+          RELEASE_DATE=$(date +'%Y-%m-%d')
+          ESCAPED_LINK="https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}"
+          RELEASE_NAME=$(gh release view ${NEW_VERSION} --json body -q '.body' | head -n 1)
+          sed -i "s/^## 🔜 \[Unreleased\].*/## 🔜 [${NEW_VERSION}](${ESCAPED_LINK}) - ${RELEASE_DATE}: ${RELEASE_NAME}/" docs/CHANGELOG.md
 
           # Append template for the next unreleased section
-          sed -i "/\*\*Key:\*\*/r<(tail -n +5 docs/changelog_section_template.md)" docs/CHANGELOG.md
+          TEMPLATE=$(tail -n +5 docs/changelog_section_template.md)
+          printf "\n%s\n" "$TEMPLATE" >> docs/CHANGELOG.md
 
           git add docs/CHANGELOG.md
 
