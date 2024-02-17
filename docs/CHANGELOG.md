@@ -3,8 +3,17 @@
 Test fixtures for use by clients are available for each release on the [Github releases page](https://github.com/ethereum/execution-spec-tests/releases).
 
 **Key:** ✨ = New, 🐞 = Fixed, 🔀 = Changed, 💥 = Breaking change.
+## 🔜 [Unreleased](https://github.com/ethereum/execution-spec-tests/releases/tag/version) - 2024-xx-xx
 
-## 🔜 [Unreleased](https://github.com/ethereum/execution-spec-tests/releases/tag/v-Unreleased) - 2024-xx-xx
+### 🧪 Test Cases
+
+### 🛠️ Framework
+
+### 🔧 EVM Tools
+
+### 📋 Misc
+
+## [v8.8.8](https://github.com/ethereum/execution-spec-tests/releases/tag/v8.8.8) - 2024-02-17: Prague Release
 
 ### 🧪 Test Cases
 
