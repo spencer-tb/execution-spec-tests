@@ -1,6 +1,7 @@
 """
 Base test class and helper functions for Ethereum state and blockchain tests.
 """
+
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from itertools import count
@@ -16,6 +17,7 @@ from ...common.conversions import to_hex
 from ...common.json import JSONEncoder
 from ...common.json import field as json_field
 from ...reference_spec.reference_spec import ReferenceSpec
+from ...utility.helpers import get_framework_version
 
 
 def verify_transactions(txs: List[Transaction] | None, result) -> List[int]:
@@ -100,6 +102,7 @@ class BaseFixture:
         self.info["filling-transition-tool"] = t8n.version()
         if ref_spec is not None:
             ref_spec.write_info(self.info)
+        self.info["framework-version"] = get_framework_version()
 
     @abstractmethod
     def to_json(self) -> Dict[str, Any]:
