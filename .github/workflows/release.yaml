@@ -1,9 +1,6 @@
 name: Post Release PR
 
 on:
-  push:
-    branches:
-      - main
   release:
     types: [published]
 
@@ -30,10 +27,25 @@ jobs:
           echo "NEW_BRANCH=release-${{ github.event.release.tag_name }}" >> $GITHUB_ENV
           echo "COMMIT_MSG=feat(docs|fw): release EEST $NEW_VERSION" >> $GITHUB_ENV
 
-      - name: Update version in setup.cfg
+      - name: Update version in `setup.cfg`
         run: |
           sed -i "s/^version = .*/version = $NEW_VERSION/" setup.cfg
           git add setup.cfg
+
+      - name: Update `CHANGELOG.md`
+        env:
+          RELEASE_DATE: $(date +'%Y-%m-%d')
+        run: |
+          # Replace unreleased link with the new release information
+          ESCAPED_LINK="https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}"
+          RELEASE_NAME=$(gh release view ${NEW_VERSION} --json body -q '.body' | sed -n '1p')
+          sed -i "s/## 🔜 \[Unreleased\](https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/version) - 2024-xx-xx/## 🔜 [${NEW_VERSION}](${ESCAPED_LINK}) - ${RELEASE_DATE}: ${FIRST_LINE}\n\n&/" docs/CHANGELOG.md
+
+          # Append template for the next unreleased section
+          sed -i '/\*\*Key:\*\*/r docs/changelog_section_template.md' docs/CHANGELOG.md
+
+          git add docs/CHANGELOG.md
+
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
@@ -44,5 +56,7 @@ jobs:
           title: ${{ env.COMMIT_MSG }}
           body: |
             ## 🗒️ Description
-            Post ${{ env.COMMIT_MSG }} release changes.
+            Post ${{ env.NEW_VERSION }} release changes:
+            - Bump version within `setup.cfg`.
+            - Update `CHANGELOG.md` and copy in `changelog_section_template.md`.
           base: main
