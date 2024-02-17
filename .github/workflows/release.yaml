@@ -35,13 +35,14 @@ jobs:
           git push --set-upstream origin $NEW_BRANCH
 
       - name: Create pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create \
             --title "$COMMIT_MSG" \
             --body "This PR updates the framework version in setup.cfg to $NEW_VERSION." \
             --head $NEW_BRANCH \
             --base main \
-            --repo ${{ github.repository }}
+            --repo ${{ github.repository }} \
             --token ${{ secrets.GITHUB_TOKEN }}
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
