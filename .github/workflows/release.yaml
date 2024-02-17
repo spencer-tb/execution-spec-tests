@@ -7,10 +7,6 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   update-version:
     runs-on: ubuntu-latest
@@ -40,8 +36,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ env.NEW_BRANCH }}
-          commit-message: "Release EEST ${{ env.NEW_VERSION }}"
-          title: "feat(docs|fw): release EEST ${{ env.NEW_VERSION }}"
-          body: "This PR updates the framework version in setup.cfg to ${{ env.NEW_VERSION }}."
+          commit-message: "${{ env.COMMIT_MSG }}"
+          title: "${{ env.COMMIT_MSG }}"
+          body: |
+            "## 🗒️ Description\n Post ${{ env.COMMIT_MSG }} release changes."
           base: main
 
