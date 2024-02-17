@@ -44,5 +44,4 @@ jobs:
             --head $NEW_BRANCH \
             --base main \
             --repo ${{ github.repository }} \
-            --token ${{ secrets.GITHUB_TOKEN }}
 
