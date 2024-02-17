@@ -1,6 +1,9 @@
 name: Post Release Jobs
 
 on:
+  push:
+    branches:
+      - main
   release:
     types: [published]
 
