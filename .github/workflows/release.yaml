@@ -40,8 +40,7 @@ jobs:
           RELEASE_NAME=$(gh release view ${NEW_VERSION} --json body -q '.body' | sed -n '1p')
 
           # Replace unreleased link with the new release information
-          sed -i "s/^## 🔜 \[Unreleased\].*/## 🔜 [${NEW_VERSION}](https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}) - \
-          $(date +%Y-%m-%d): ${RELEASE_NAME}/" docs/CHANGELOG.md
+          sed -i "s/^## 🔜 \[Unreleased\].*/## 🔜 [${NEW_VERSION}](https:\/\/github.com\/ethereum\/execution-spec-tests\/releases\/tag\/${NEW_VERSION}) - $(date +%Y-%m-%d): ${RELEASE_NAME}/" docs/CHANGELOG.md
 
           # Append template for the next unreleased section
           sed -i "/\*\*Key:\*\*/r<(tail -n +5 docs/changelog_section_template.md)" docs/CHANGELOG.md
