@@ -20,13 +20,13 @@ jobs:
 
       - name: Create New Branch and Update version in setup.cfg
         run: |
-          NEW_VERSION=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')
-          NEW_BRANCH="release-${{ github.event.release.tag_name }}"
-          echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV  # Set NEW_BRANCH for the job
+          NEW_VERSION=${{ github.event.release.tag_name }}  # Keep the 'v' prefix
+          NEW_BRANCH="release-${NEW_VERSION}"
+          echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
           git checkout -b $NEW_BRANCH
-          sed -i "s/^version = .*/version = $NEW_VERSION/" setup.cfg
+          sed -i "s/^version = .*/version = $NEW_VERSION/" setup.cfg  # Use $NEW_VERSION directly
           git add setup.cfg
-          git commit -m "Release EEST `${{ github.event.release.tag_name }}`"
+          git commit -m "Release EEST $NEW_VERSION"
           git push origin $NEW_BRANCH
 
       - name: Create Pull Request
