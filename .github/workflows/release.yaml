@@ -32,14 +32,14 @@ jobs:
           git commit -m "feat(docs|fw): release EEST $NEW_VERSION"
           git push --set-upstream origin $NEW_BRANCH
 
-    - name: Check changes after sed command
-      run: |
-        git diff
+      - name: Check changes after sed command
+        run: |
+          git diff
 
-    - name: List differences between new branch and main
-      run: |
-        git fetch origin main:main
-        git diff main...$NEW_BRANCH
+      - name: List differences between new branch and main
+        run: |
+          git fetch origin main:main
+          git diff main...$NEW_BRANCH
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
