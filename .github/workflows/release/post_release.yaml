@@ -51,7 +51,7 @@ jobs:
           sed -i "s/^## 🔜 \[Unreleased\].*/## [${NEW_VERSION}](${ESCAPED_LINK}) - ${RELEASE_DATE}: ${RELEASE_NAME}/" docs/CHANGELOG.md
 
           # Append changelog template for the new unreleased section
-          tail -n +4 docs/changelog_section_template.md > temp_template.md
+          { echo ""; tail -n +5 docs/changelog_section_template.md; } > temp_template.md
           sed -i '/\*\*Key:\*\*/ r temp_template.md' docs/CHANGELOG.md
           rm temp_template.md
 
