@@ -4,7 +4,17 @@ Test fixtures for use by clients are available for each release on the [Github r
 
 **Key:** ✨ = New, 🐞 = Fixed, 🔀 = Changed, 💥 = Breaking change.
 
-## 🔜 [Unreleased](https://github.com/ethereum/execution-spec-tests/releases/tag/v-Unreleased) - 2024-xx-xx
+## 🔜 [Unreleased](https://github.com/ethereum/execution-spec-tests/releases/tag/version) - 2024-xx-xx
+
+### 🧪 Test Cases
+
+### 🛠️ Framework
+
+### 🔧 EVM Tools
+
+### 📋 Misc
+
+## [v6.7.8](https://github.com/ethereum/execution-spec-tests/releases/tag/v6.7.8) - 2024-02-20: New Release Name
 
 ### 🧪 Test Cases
 
