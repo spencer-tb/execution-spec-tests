@@ -55,6 +55,7 @@ from .spec import (
     TestInfo,
 )
 from .spec.blockchain.types import Block, Header
+from .utility.helpers import get_framework_version
 from .vm import Opcode, OpcodeCallArg, Opcodes
 
 __all__ = (
@@ -112,5 +113,6 @@ __all__ = (
     "cost_memory_bytes",
     "eip_2028_transaction_data_cost",
     "eip_2028_transaction_data_cost",
+    "get_framework_version",
     "transaction_list_root",
 )
