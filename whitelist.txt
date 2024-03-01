@@ -334,6 +334,7 @@ v1
 validator
 validators
 venv
+verkle
 visualstudio
 vkt
 vm
