@@ -335,6 +335,7 @@ validator
 validators
 venv
 visualstudio
+vkt
 vm
 vscode
 vv
