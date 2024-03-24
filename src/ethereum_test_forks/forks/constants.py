@@ -2,7 +2,7 @@
 Constant values used by the forks.
 """
 
-from typing import Dict, Generator, Iterator, Tuple
+from typing import Dict, Generator, Iterator, Mapping, Tuple
 
 from Crypto.Hash import SHA256
 
@@ -47,7 +47,7 @@ def account_generator(
         }
 
 
-VERKLE_PRE_ALLOCATION: Dict[int, Dict[str, str | int | Dict[int, int]]] = {
+VERKLE_PRE_ALLOCATION: Mapping = {
     addr: account
     for addr, account in account_generator(seed=seed_generator(0), max_accounts=MAX_ACCOUNTS)
 }

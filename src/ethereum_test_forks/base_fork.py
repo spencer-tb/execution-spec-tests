@@ -3,7 +3,7 @@ Abstract base class for Ethereum forks
 """
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Any, ClassVar, Dict, List, Optional, Protocol, Type
+from typing import Any, ClassVar, List, Mapping, Optional, Protocol, Type
 
 from semver import Version
 
@@ -184,9 +184,7 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
     @classmethod
     @prefer_transition_to_method
     @abstractmethod
-    def pre_allocation(
-        cls, block_number: int = 0, timestamp: int = 0
-    ) -> Dict[int, Dict[str, str | int | Dict[int, int]]]:
+    def pre_allocation(cls) -> Mapping:
         """
         Returns required pre-allocation of accounts for any kind of test.
 
@@ -198,9 +196,7 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
     @classmethod
     @prefer_transition_to_method
     @abstractmethod
-    def pre_allocation_blockchain(
-        cls, block_number: int = 0, timestamp: int = 0
-    ) -> Dict[int, Dict[str, str | int | Dict[int, int]]]:
+    def pre_allocation_blockchain(cls) -> Mapping:
         """
         Returns required pre-allocation of accounts for any blockchain tests.
 

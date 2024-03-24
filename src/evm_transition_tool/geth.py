@@ -25,6 +25,7 @@ class GethTransitionTool(TransitionTool):
     t8n_subcommand: Optional[str] = "t8n"
     statetest_subcommand: Optional[str] = "statetest"
     blocktest_subcommand: Optional[str] = "blocktest"
+    verkle_subcommand: Optional[str] = "verkle"
 
     binary: Path
     cached_version: Optional[str] = None
@@ -137,3 +138,30 @@ class GethTransitionTool(TransitionTool):
         else:
             result_json = []  # there is no parseable format for blocktest output
         return result_json
+
+    def verkle_tree_key(self, account: str, storage_slot: Optional[str] = None) -> str:
+        """
+        Returns the verkle tree key for the input account using the verkle subcommand.
+        Optionally the key for the storage slot if specified.
+        """
+        command = [
+            str(self.binary),
+            str(self.t8n_subcommand),
+            str(self.verkle_subcommand),
+            str(account),
+        ]
+        if storage_slot:
+            command.append(storage_slot)
+
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        if result.returncode != 0:
+            raise Exception(
+                f"Failed to run verkle subcommand: '{' '.join(command)}'. "
+                f"Error: '{result.stderr.decode()}'"
+            )
+        return result.stdout.decode().strip()  # strip the newline character

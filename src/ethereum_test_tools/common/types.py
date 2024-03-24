@@ -789,7 +789,7 @@ class Environment(EnvironmentGeneric[Number]):
             updated_values["parent_beacon_block_root"] = 0
 
         if fork.environment_verkle_conversion_starts(number, timestamp):
-            if updated_values["verkle_conversion_ended"] is None:
+            if self.verkle_conversion_ended:
                 # Conversion is marked as completed if this is the genesis block, or we are
                 # past the conversion end fork.
                 updated_values["verkle_conversion_ended"] = (
@@ -798,29 +798,25 @@ class Environment(EnvironmentGeneric[Number]):
 
         return self.copy(**updated_values)
 
-    def update_from_result(self, transition_tool_result: Dict[str, Any]) -> "Environment":
+    def update_from_result(self, result: "Result") -> "Environment":
         """
         Updates the environment with the result of a transition tool execution.
         """
-        if "currentConversionAddress" in transition_tool_result:
-            self.verkle_conversion_address = transition_tool_result["currentConversionAddress"]
-        if "currentConversionSlotHash" in transition_tool_result:
-            self.verkle_conversion_slot_hash = transition_tool_result["currentConversionSlotHash"]
-        if "currentConversionStarted" in transition_tool_result:
-            conversion_started = transition_tool_result["currentConversionStarted"]
-            assert conversion_started is not None and isinstance(conversion_started, bool)
-            self.verkle_conversion_started = conversion_started
-        if "currentConversionEnded" in transition_tool_result:
-            conversion_ended = transition_tool_result["currentConversionEnded"]
-            assert conversion_ended is not None and isinstance(conversion_ended, bool)
-            self.verkle_conversion_ended = transition_tool_result["currentConversionEnded"]
-        if "currentConversionStorageProcessed" in transition_tool_result:
-            conversion_storage_processed = transition_tool_result[
-                "currentConversionStorageProcessed"
-            ]
-            assert conversion_storage_processed is not None and isinstance(
-                conversion_storage_processed, bool
-            )
+        if result.conversion_address:
+            self.verkle_conversion_address = result.conversion_address
+        if result.conversion_slot_hash:
+            self.verkle_conversion_slot_hash = result.conversion_slot_hash
+        if result.conversion_started:
+            conversion_started = result.conversion_started
+            assert isinstance(conversion_started, bool)
+            self.verkle_conversion_started = result.conversion_started
+        if result.conversion_ended:
+            conversion_ended = result.conversion_ended
+            assert isinstance(conversion_ended, bool)
+            self.verkle_conversion_ended = result.conversion_ended
+        if result.conversion_storage_processed:
+            conversion_storage_processed = result.conversion_storage_processed
+            assert isinstance(conversion_storage_processed, bool)
             self.verkle_conversion_storage_processed = conversion_storage_processed
         return self
 
@@ -1334,8 +1330,17 @@ class Result(CamelModel):
     excess_blob_gas: HexNumber | None = Field(None, alias="currentExcessBlobGas")
     blob_gas_used: HexNumber | None = None
 
+    # Verkle tree related: TODO
+    conversion_address: Address | None = Field(None, alias="currentConversionAddress")
+    conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
+    conversion_started: bool | None = Field(None, alias="currentConversionStarted")
+    conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
+    conversion_storage_processed: bool | None = Field(
+        None, alias="currentConversionStorageProcessed"
+    )
 
-class VerkleTree(RootModel):
+
+class VerkleTree(RootModel[Dict[str, str | None]]):
     # TODO: Implement VerkleTree model
     root: Dict[str, str | None] = Field(default_factory=dict, validate_default=True)
 

@@ -2,7 +2,7 @@
 List of all transition fork definitions.
 """
 
-from typing import Dict
+from typing import Mapping
 
 from ..transition_base_fork import transition_fork
 from .constants import VERKLE_PRE_ALLOCATION
@@ -58,12 +58,10 @@ class ShanghaiToPragueVerkleTransition(Shanghai):
     """
 
     @classmethod
-    def pre_allocation(
-        cls, block_number: int = 0, timestamp: int = 0
-    ) -> Dict[int, Dict[str, str | int | Dict[int, int]]]:
+    def pre_allocation(cls) -> Mapping:
         """
         Pre-allocates a big state full of accounts and storage to test the MPT to Verkle tree
         conversion.
         """
 
-        return VERKLE_PRE_ALLOCATION | super(Shanghai, cls).pre_allocation(block_number, timestamp)
+        return VERKLE_PRE_ALLOCATION | super(Shanghai, cls).pre_allocation()
