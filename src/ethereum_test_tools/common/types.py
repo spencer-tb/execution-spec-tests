@@ -1335,6 +1335,11 @@ class Result(CamelModel):
     blob_gas_used: HexNumber | None = None
 
 
+class VerkleTree(RootModel):
+    # TODO: Implement VerkleTree model
+    root: Dict[str, str | None] = Field(default_factory=dict, validate_default=True)
+
+
 class TransitionToolOutput(CamelModel):
     """
     Transition tool output
@@ -1342,3 +1347,4 @@ class TransitionToolOutput(CamelModel):
 
     alloc: Alloc
     result: Result
+    vkt: VerkleTree

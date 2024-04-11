@@ -309,7 +309,7 @@ class TransitionTool:
         txs: Any
         env: Any
         fork_name: str
-        mpt_alloc: Any = None
+        vkt: Any = None
         chain_id: int = field(default=1)
         reward: int = field(default=0)
 
@@ -331,8 +331,8 @@ class TransitionTool:
             "env": t8n_data.env,
             "txs": t8n_data.txs,
         }
-        if t8n_data.mpt_alloc is not None:
-            input_contents["allocMPT"] = t8n_data.mpt_alloc
+        if t8n_data.vkt is not None:
+            input_contents["vkt"] = t8n_data.vkt
 
         input_paths = {
             k: os.path.join(temp_dir.name, "input", f"{k}.json") for k in input_contents.keys()
@@ -341,7 +341,8 @@ class TransitionTool:
             write_json_file(input_contents[key], file_path)
 
         output_paths = {
-            output: os.path.join("output", f"{output}.json") for output in ["alloc", "result"]
+            output: os.path.join("output", f"{output}.json")
+            for output in ["alloc", "result", "vkt"]
         }
         output_paths["body"] = os.path.join("output", "txs.rlp")
 
@@ -362,6 +363,9 @@ class TransitionTool:
             output_paths["result"],
             "--output.alloc",
             output_paths["alloc"],
+            # This is not optional because transition could commence in the middle of a block
+            "--output.vkt",
+            output_paths["vkt"],
             "--output.body",
             output_paths["body"],
             "--state.reward",
@@ -370,8 +374,8 @@ class TransitionTool:
             str(t8n_data.chain_id),
         ]
 
-        if t8n_data.mpt_alloc is not None:
-            args.extend(["--input.allocMPT", input_paths["allocMPT"]])
+        if t8n_data.vkt is not None:
+            args.extend(["--input.vkt", input_paths["vkt"]])
 
         if self.trace:
             args.append("--trace")
@@ -425,8 +429,9 @@ class TransitionTool:
         for key, file_path in output_paths.items():
             if "txs.rlp" in file_path:
                 continue
-            with open(file_path, "r+") as file:
-                output_contents[key] = json.load(file)
+            if os.path.exists(file_path):
+                with open(file_path, "r+") as file:
+                    output_contents[key] = json.load(file)
 
         if self.trace:
             self.collect_traces(output_contents["result"]["receipts"], temp_dir, debug_output_path)
@@ -452,8 +457,8 @@ class TransitionTool:
             "txs": t8n_data.txs,
             "env": t8n_data.env,
         }
-        if t8n_data.mpt_alloc is not None:
-            stdin["allocMPT"] = t8n_data.mpt_alloc
+        if t8n_data.vkt is not None:
+            stdin["vkt"] = t8n_data.vkt
 
         result = subprocess.run(
             args,
@@ -500,12 +505,13 @@ class TransitionTool:
 
         args = command + ["--input.alloc=stdin", "--input.txs=stdin", "--input.env=stdin"]
 
-        if t8n_data.mpt_alloc is not None:
-            args.append("--input.allocMPT=stdin")
+        if t8n_data.vkt is not None:
+            args.append("--input.vkt=stdin")
 
         args += [
             "--output.result=stdout",
             "--output.alloc=stdout",
+            "--output.vkt=stdout",
             "--output.body=stdout",
             f"--state.fork={t8n_data.fork_name}",
             f"--state.chainid={t8n_data.chain_id}",
@@ -565,7 +571,7 @@ class TransitionTool:
         txs: Any,
         env: Any,
         fork_name: str,
-        mpt_alloc: Any = None,
+        vkt: Any = None,
         chain_id: int = 1,
         reward: int = 0,
         eips: Optional[List[int]] = None,
@@ -586,9 +592,9 @@ class TransitionTool:
             txs=txs,
             env=env,
             fork_name=fork_name,
+            vkt=vkt,
             chain_id=chain_id,
             reward=reward,
-            mpt_alloc=mpt_alloc,
         )
 
         if self.t8n_use_stream:
