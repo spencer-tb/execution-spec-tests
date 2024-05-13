@@ -12,6 +12,7 @@ from typing import (
     Generic,
     Iterator,
     List,
+    Optional,
     Sequence,
     SupportsBytes,
     Type,
@@ -302,6 +303,7 @@ class Storage(RootModel[Dict[StorageKeyValueType, StorageKeyValueType]]):
         if other is None:
             other = Storage({})
         for key in self.keys() & other.keys():
+            print(key, self[key], other[key])
             if self[key] != other[key]:
                 raise Storage.KeyValueMismatch(
                     address=address, key=key, want=self[key], got=other[key]
@@ -1341,15 +1343,23 @@ class Result(CamelModel):
 
 
 class VerkleTree(RootModel[Dict[str, str | None]]):
-    # TODO: Implement VerkleTree model
-    root: Dict[str, str | None] = Field(default_factory=dict, validate_default=True)
+    """
+    Verkle tree model. TODO refine this model.
+    """
+
+    root: Dict[str, str | None] = Field(
+        default_factory=dict,
+        validate_default=True,
+    )
 
 
 class TransitionToolOutput(CamelModel):
     """
-    Transition tool output
+    Transition tool output model for t8n validation.
     """
 
     alloc: Alloc
     result: Result
-    vkt: VerkleTree
+
+    # vkt is optional as only valid from Osaka.
+    vkt: Optional[VerkleTree] = None
