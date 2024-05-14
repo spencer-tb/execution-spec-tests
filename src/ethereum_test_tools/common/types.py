@@ -719,11 +719,14 @@ class Environment(EnvironmentGeneric[Number]):
     parent_blob_gas_used: Number | None = Field(None)
     parent_excess_blob_gas: Number | None = Field(None)
     parent_beacon_block_root: Hash | None = Field(None)
-    verkle_conversion_address: Address | None = Field(None)
-    verkle_conversion_slot_hash: Hash | None = Field(None)
-    verkle_conversion_started: bool | None = Field(None)
-    verkle_conversion_ended: bool | None = Field(None)
-    verkle_conversion_storage_processed: bool | None = Field(None)
+    verkle_conversion_address: Address | None = Field(None, alias="currentConversionAddress")
+    verkle_conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
+    verkle_conversion_started: bool | None = Field(None, alias="currentConversionStarted")
+    verkle_conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
+    verkle_conversion_storage_processed: bool | None = Field(
+        None,
+        alias="currentConversionStorageProcessed",
+    )
 
     block_hashes: Dict[Number, Hash] = Field(default_factory=dict)
     ommers: List[Hash] = Field(default_factory=list)
