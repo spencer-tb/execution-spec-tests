@@ -807,22 +807,24 @@ class Environment(EnvironmentGeneric[Number]):
         """
         Updates the environment with the result of a transition tool execution.
         """
-        if result.conversion_address:
-            self.verkle_conversion_address = result.conversion_address
-        if result.conversion_slot_hash:
-            self.verkle_conversion_slot_hash = result.conversion_slot_hash
-        if result.conversion_started:
-            conversion_started = result.conversion_started
+        if result.verkle_conversion_address:
+            self.verkle_conversion_address = result.verkle_conversion_address
+        if result.verkle_conversion_slot_hash:
+            self.verkle_conversion_slot_hash = result.verkle_conversion_slot_hash
+        # Boolean fields required to check if not None so we actually update them even when False
+        if result.verkle_conversion_started is not None:
+            conversion_started = result.verkle_conversion_started
             assert isinstance(conversion_started, bool)
-            self.verkle_conversion_started = result.conversion_started
-        if result.conversion_ended:
-            conversion_ended = result.conversion_ended
+            self.verkle_conversion_started = result.verkle_conversion_started
+        if result.verkle_conversion_ended is not None:
+            conversion_ended = result.verkle_conversion_ended
             assert isinstance(conversion_ended, bool)
-            self.verkle_conversion_ended = result.conversion_ended
-        if result.conversion_storage_processed:
-            conversion_storage_processed = result.conversion_storage_processed
+            self.verkle_conversion_ended = result.verkle_conversion_ended
+        if result.verkle_conversion_storage_processed is not None:
+            conversion_storage_processed = result.verkle_conversion_storage_processed
             assert isinstance(conversion_storage_processed, bool)
             self.verkle_conversion_storage_processed = conversion_storage_processed
+
         return self
 
 
@@ -1336,11 +1338,11 @@ class Result(CamelModel):
     blob_gas_used: HexNumber | None = None
 
     # Verkle tree related: TODO
-    conversion_address: Address | None = Field(None, alias="currentConversionAddress")
-    conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
-    conversion_started: bool | None = Field(None, alias="currentConversionStarted")
-    conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
-    conversion_storage_processed: bool | None = Field(
+    verkle_conversion_address: Address | None = Field(None, alias="currentConversionAddress")
+    verkle_conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
+    verkle_conversion_started: bool | None = Field(None, alias="currentConversionStarted")
+    verkle_conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
+    verkle_conversion_storage_processed: bool | None = Field(
         None, alias="currentConversionStorageProcessed"
     )
 
