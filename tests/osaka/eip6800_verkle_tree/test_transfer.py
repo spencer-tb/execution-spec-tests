@@ -20,8 +20,14 @@ from ..temp_verkle_helpers import AccountHeaderEntry, vkt_key_header
 
 precompile_address = Address("0x09")
 
+# TODO: Update reference spec version
+REFERENCE_SPEC_GIT_PATH = "EIPS/eip-6800.md"
+REFERENCE_SPEC_VERSION = "2f8299df31bb8173618901a03a8366a3183479b0"
 
-@pytest.mark.valid_from("Osaka")
+
+# @pytest.mark.valid_from("Osaka")
+# TODO: Update to t8n/geth to use Osaka first
+@pytest.mark.valid_from("Prague")
 @pytest.mark.parametrize(
     "target",
     [
