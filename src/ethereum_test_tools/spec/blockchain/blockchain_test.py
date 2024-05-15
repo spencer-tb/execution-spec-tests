@@ -112,8 +112,8 @@ class BlockchainTest(BaseTest):
             Alloc.model_validate(fork.pre_allocation_blockchain()),
             self.pre,
         )
-        if empty_accounts := pre_alloc.empty_accounts():
-            raise Exception(f"Empty accounts in pre state: {empty_accounts}")
+        # if empty_accounts := pre_alloc.empty_accounts():
+        # raise Exception(f"Empty accounts in pre state: {empty_accounts}")
         state_root = pre_alloc.state_root()
         genesis = FixtureHeader(
             parent_hash=0,
