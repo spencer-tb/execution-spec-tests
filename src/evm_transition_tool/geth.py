@@ -3,14 +3,17 @@ Go-ethereum Transition tool interface.
 """
 
 import json
+import os
 import shutil
 import subprocess
+import tempfile
 import textwrap
 from pathlib import Path
 from re import compile
-from typing import Optional
+from typing import Any, Optional
 
 from ethereum_test_forks import Fork
+from ethereum_test_tools.common.json import to_json
 
 from .transition_tool import FixtureFormats, TransitionTool, dump_files_to_directory
 
@@ -139,15 +142,15 @@ class GethTransitionTool(TransitionTool):
             result_json = []  # there is no parseable format for blocktest output
         return result_json
 
-    def verkle_tree_key(self, account: str, storage_slot: Optional[str] = None) -> str:
+    def verkle_single_key(self, account: str, storage_slot: Optional[str] = None) -> str:
         """
         Returns the verkle tree key for the input account using the verkle subcommand.
-        Optionally the key for the storage slot if specified.
+        Optionally the key for the storage slot is returned if the slot index is specified.
         """
         command = [
             str(self.binary),
-            str(self.t8n_subcommand),
             str(self.verkle_subcommand),
+            "single-key",
             str(account),
         ]
         if storage_slot:
@@ -165,3 +168,40 @@ class GethTransitionTool(TransitionTool):
                 f"Error: '{result.stderr.decode()}'"
             )
         return result.stdout.decode().strip()  # strip the newline character
+
+    # TODO: use VerkleTree instead of Mapping.
+    def from_mpt_to_verkle_tree(self, mpt_alloc: Any) -> Any:
+        """
+        Returns the verkle tree representation for an entire MPT alloc using the verkle subcommand.
+        """
+        # Write the MPT alloc to a temporary file: alloc.json
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_dir = os.path.join(temp_dir, "input")
+            os.mkdir(input_dir)
+            alloc_path = os.path.join(input_dir, "alloc.json")
+            with open(alloc_path, "w") as f:
+                json.dump(to_json(mpt_alloc), f)
+
+            # Check if the file was created
+            if not os.path.exists(alloc_path):
+                raise Exception(f"Failed to create alloc.json at {alloc_path}")
+
+            # Run the verkle subcommand with the alloc.json file as input
+            command = [
+                str(self.binary),
+                str(self.verkle_subcommand),
+                "tree-keys",
+                "--input.alloc",
+                alloc_path,
+            ]
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            if result.returncode != 0:
+                raise Exception(
+                    f"Failed to run verkle subcommand: '{' '.join(command)}'. "
+                    f"Error: '{result.stderr.decode()}'"
+                )
+            return json.loads(result.stdout.decode())

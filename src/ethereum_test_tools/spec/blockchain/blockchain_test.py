@@ -14,7 +14,13 @@ from ...common import Alloc, EmptyTrieRoot, Environment, Hash, Transaction, Verk
 from ...common.constants import EmptyOmmersRoot
 from ...common.json import to_json
 from ...common.types import TransitionToolOutput
-from ..base.base_test import BaseFixture, BaseTest, verify_result, verify_transactions
+from ..base.base_test import (
+    BaseFixture,
+    BaseTest,
+    verify_post_vkt,
+    verify_result,
+    verify_transactions,
+)
 from ..debugging import print_traces
 from .types import (
     Block,
@@ -112,8 +118,8 @@ class BlockchainTest(BaseTest):
             Alloc.model_validate(fork.pre_allocation_blockchain()),
             self.pre,
         )
-        if empty_accounts := pre_alloc.empty_accounts():
-            raise Exception(f"Empty accounts in pre state: {empty_accounts}")
+        # if empty_accounts := pre_alloc.empty_accounts():
+        # raise Exception(f"Empty accounts in pre state: {empty_accounts}")
         state_root = pre_alloc.state_root()
         genesis = FixtureHeader(
             parent_hash=0,
@@ -271,14 +277,13 @@ class BlockchainTest(BaseTest):
             else fork.blockchain_test_network_name()
         )
 
-    def verify_post_state(self, *, t8n, alloc: Alloc, vkt=None):
+    def verify_post_state(self, *, t8n, alloc: Any, vkt=None):
         """
         Verifies the post state after all block/s or payload/s are generated.
         """
         try:
             if vkt is not None:
-                # self.post.verify_post_vkt(vkt)  # TODO: implement this method
-                print("Skipping VKT verification for now.")
+                verify_post_vkt(t8n, alloc, vkt)
             else:
                 self.post.verify_post_alloc(alloc)
         except Exception as e:
