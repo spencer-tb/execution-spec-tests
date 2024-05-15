@@ -501,3 +501,18 @@ class Prague(Shanghai):
         Verkle conversion starts in this fork.
         """
         return True
+
+    @classmethod
+    def pre_allocation_blockchain(cls) -> Mapping:
+        """
+        Prague requires pre-allocation of the history storage contract for EIP-2935 on blockchain
+        type tests.
+        """
+        new_allocation = {
+            0x25A219378DAD9B3503C8268C9CA836A52427A4FB: {
+                "nonce": 1,
+                "code": "0x60203611603157600143035f35116029575f35612000014311602957612000"
+                "5f3506545f5260205ff35b5f5f5260205ff35b5f5ffd00",
+            }
+        }
+        return new_allocation | super(Prague, cls).pre_allocation_blockchain()
