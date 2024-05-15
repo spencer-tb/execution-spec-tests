@@ -50,10 +50,10 @@ def test_verkle_from_mpt_conversion(
     tx_count = 64
     blocks: List[Block] = []
     code_storage = Storage()
-    for _ in range(block_count):
+    for b in range(block_count):
         txs: List[Transaction] = []
         for t in range(tx_count):
-            storage_value = 2**256 - t - 1
+            storage_value = 2**256 - t - 1 - b * tx_count
             storage_key = code_storage.store_next(storage_value)
             txs.append(
                 Transaction(
