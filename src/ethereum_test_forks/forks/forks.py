@@ -510,7 +510,7 @@ class Prague(Shanghai):
         """
         new_allocation = {
             0x25A219378DAD9B3503C8268C9CA836A52427A4FB: {
-                "nonce": 1,
+                # "nonce": 1,
             }
         }
         return new_allocation | super(Prague, cls).pre_allocation_blockchain()
