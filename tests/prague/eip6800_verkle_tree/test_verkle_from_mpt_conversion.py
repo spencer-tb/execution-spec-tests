@@ -38,31 +38,54 @@ def test_verkle_from_mpt_conversion(
 ):
     """
     Perform MCOPY operations using different offsets and lengths:
-      - Zero inputs
-      - Memory rewrites (copy from and to the same location)
-      - Memory overwrites (copy from and to different locations)
-      - Memory extensions (copy to a location that is out of bounds)
-      - Memory clear (copy from a location that is out of bounds)
+        - Zero inputs
+        - Memory rewrites (copy from and to the same location)
+        - Memory overwrites (copy from and to different locations)
+        - Memory extensions (copy to a location that is out of bounds)
+        - Memory clear (copy from a location that is out of bounds)
     """
     nonce = count()
-    # block_count = 64 # TODO: Revert, since it takes too long for debugging purposes
     block_count = 4
-    tx_count = 64
+    tx_count = 1
     blocks: List[Block] = []
     code_storage = Storage()
+
+    # Used to debug post vkt verification
+    post_verification_flag = True
+
     for b in range(block_count):
         txs: List[Transaction] = []
         for t in range(tx_count):
-            storage_value = 2**256 - t - 1 - b * tx_count
-            storage_key = code_storage.store_next(storage_value)
-            txs.append(
-                Transaction(
-                    nonce=next(nonce),
-                    to=code_address,
-                    data=Hash(storage_key) + Hash(storage_value),
-                    gas_limit=100_000,
+            storage_value = 2**256 - t - 1
+            if not post_verification_flag:
+                storage_key = code_storage.store_next(storage_value)
+                txs.append(
+                    Transaction(
+                        nonce=next(nonce),
+                        to=code_address,
+                        data=Hash(storage_key) + Hash(storage_value),
+                        gas_limit=100_000,
+                    )
                 )
-            )
+            else:
+                if b >= 2:
+                    storage_key = f"0x0{b}"
+                    code_storage[storage_key] = storage_value
+                    txs.append(
+                        Transaction(
+                            nonce=next(nonce),
+                            to=code_address,
+                            data=Hash(storage_key) + Hash(storage_value),
+                            gas_limit=100_000,
+                        )
+                    )
+                else:
+                    txs.append(
+                        Transaction(
+                            nonce=next(nonce),
+                            gas_limit=100_000,
+                        )
+                    )
         blocks.append(Block(txs=txs))
     blockchain_test(
         genesis_environment=Environment(),

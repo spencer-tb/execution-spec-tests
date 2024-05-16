@@ -75,17 +75,17 @@ def verify_post_vkt(t8n: GethTransitionTool, expected_post: Alloc, got_vkt: Mapp
         raise Exception("Only geth's evm tool is supported to verify verkle trees.")
 
     # Convert the expected post alloc to a verkle tree for comparison.
-    expected_vkt = t8n.from_mpt_to_verkle_tree(mpt_alloc=expected_post)
+    expected_vkt = dict(t8n.from_mpt_to_verkle_tree(mpt_alloc=expected_post))
+    got_vkt = dict(got_vkt)["root"]
 
     # Check for keys that are missing the actual VKT
-    missing_keys = [key for key in expected_vkt if key not in dict(got_vkt)]
-
-    # TODO: how to determine what is unexpected, i.e TestAddress is expected but not in post state
-    # unexpected_keys = [key for key in got_vkt if key not in expected_vkt]
+    missing_keys = [key for key in expected_vkt.keys() if key not in got_vkt.keys()]
+    if missing_keys:
+        raise Exception(f"VKT mismatch: missing keys in expected post state: {missing_keys}")
 
     # Compare the values for each key in the expected VKT
-    for key, expected_value in dict(expected_vkt).items():
-        actual_value = dict(got_vkt)["root"].get(key)
+    for key, expected_value in expected_vkt.items():
+        actual_value = got_vkt.get(key)
         if expected_value != actual_value:
             raise Exception(
                 f"VKT mismatch at key {key}: expected {expected_value}, got {actual_value}"
