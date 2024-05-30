@@ -8,6 +8,7 @@ Simulators using this plugin must define two pytest fixtures:
 
 These fixtures are used when creating the hive test suite.
 """
+
 import os
 
 import pytest
@@ -107,9 +108,8 @@ def hive_test(request, test_suite: HiveTestSuite):
     """
     Propagate the pytest test case and its result to the hive server.
     """
-    test_parameter_string = request.node.nodeid  # test fixture name
+    test_parameter_string = request.node.name
     test: HiveTest = test_suite.start_test(
-        # TODO: pass test case documentation when available
         name=test_parameter_string,
         description="TODO: This should come from the '_info' field.",
     )

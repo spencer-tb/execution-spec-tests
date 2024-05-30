@@ -216,6 +216,6 @@ def pytest_generate_tests(metafunc):
         ]
         metafunc.parametrize("test_case", pytest_params)
 
-    # if "client_type" in metafunc.fixturenames:
-    # client_ids = [client.name for client in metafunc.config.hive_execution_clients]
-    # metafunc.parametrize("client_type", metafunc.config.hive_execution_clients, ids=client_ids)
+    if "client_type" in metafunc.fixturenames:
+        client_ids = [client.name for client in metafunc.config.hive_execution_clients]
+        metafunc.parametrize("client_type", metafunc.config.hive_execution_clients, ids=client_ids)
