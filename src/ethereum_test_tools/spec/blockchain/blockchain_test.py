@@ -302,13 +302,9 @@ class BlockchainTest(BaseTest):
             requests = Requests(root=block.requests)
             header.requests_root = requests.trie_root
 
-        # TODO: Verkle specific logic, update when Verkle fork is confirmed.
         if fork.fork_at(env.number, env.timestamp) == ShanghaiEIP6800:
             env.update_from_result(transition_tool_output.result)
-            if env.verkle_conversion_ended:
-                transition_tool_output.alloc = Alloc()
-            else:
-                transition_tool_output.alloc = previous_alloc
+            transition_tool_output.alloc = previous_alloc
 
         return (
             env,
@@ -359,7 +355,7 @@ class BlockchainTest(BaseTest):
         alloc = pre
         env = environment_from_parent_header(genesis.header)
         head = genesis.header.block_hash
-        vkt = None  # might be necessary to check at genesis ?
+        vkt = None
 
         for block in self.blocks:
             if block.rlp is None:
@@ -403,7 +399,7 @@ class BlockchainTest(BaseTest):
                 ).with_rlp(txs=txs, requests=requests)
                 if block.exception is None:
                     fixture_blocks.append(fixture_block)
-                    # Update env, alloc and last block hash for the next block.
+                    # Update env, alloc, vkt, and last block hash for the next block.
                     alloc = new_alloc
                     env = apply_new_parent(new_env, header)
                     head = header.block_hash
@@ -458,7 +454,7 @@ class BlockchainTest(BaseTest):
         alloc = pre
         env = environment_from_parent_header(genesis.header)
         head_hash = genesis.header.block_hash
-        vkt = None  # might be necessary to check at genesis ?
+        vkt = None
 
         for block in self.blocks:
             new_env, header, txs, new_alloc, requests, new_vkt = self.generate_block_data(
