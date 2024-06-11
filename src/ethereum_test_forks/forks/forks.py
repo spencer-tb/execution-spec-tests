@@ -157,6 +157,13 @@ class Frontier(BaseFork, solc_name="homestead"):
         return [0]
 
     @classmethod
+    def contract_creating_tx_types(cls, block_number: int = 0, timestamp: int = 0) -> List[int]:
+        """
+        At Genesis, only legacy transactions are allowed
+        """
+        return [0]
+
+    @classmethod
     def precompiles(cls, block_number: int = 0, timestamp: int = 0) -> List[int]:
         """
         At Genesis, no pre-compiles are allowed
@@ -274,6 +281,13 @@ class Berlin(Istanbul):
         """
         return [1] + super(Berlin, cls).tx_types(block_number, timestamp)
 
+    @classmethod
+    def contract_creating_tx_types(cls, block_number: int = 0, timestamp: int = 0) -> List[int]:
+        """
+        At Berlin, access list transactions are introduced
+        """
+        return [1] + super(Berlin, cls).contract_creating_tx_types(block_number, timestamp)
+
 
 class London(Berlin):
     """
@@ -293,6 +307,13 @@ class London(Berlin):
         At London, dynamic fee transactions are introduced
         """
         return [2] + super(London, cls).tx_types(block_number, timestamp)
+
+    @classmethod
+    def contract_creating_tx_types(cls, block_number: int = 0, timestamp: int = 0) -> List[int]:
+        """
+        At London, dynamic fee transactions are introduced
+        """
+        return [2] + super(London, cls).contract_creating_tx_types(block_number, timestamp)
 
 
 # Glacier forks skipped, unless explicitly specified
@@ -581,3 +602,29 @@ class Prague(Cancun):
         At Prague, version number of NewPayload and ForkchoiceUpdated diverge.
         """
         return 3
+
+
+class CancunEIP7692(  # noqa: SC200
+    Cancun,
+    transition_tool_name="Prague",  # Evmone enables (only) EOF at Prague
+    blockchain_test_network_name="Prague",  # Evmone enables (only) EOF at Prague
+    solc_name="cancun",
+):
+    """
+    Cancun + EIP-7692 (EOF) fork
+    """
+
+    @classmethod
+    def is_deployed(cls) -> bool:
+        """
+        Flags that the fork has not been deployed to mainnet; it is under active
+        development.
+        """
+        return False
+
+    @classmethod
+    def solc_min_version(cls) -> Version:
+        """
+        Returns the minimum version of solc that supports this fork.
+        """
+        return Version.parse("1.0.0")  # set a high version; currently unknown

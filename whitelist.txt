@@ -5,6 +5,7 @@ acl
 addr
 address
 address2
+ase
 alloc
 api
 apis
@@ -18,6 +19,7 @@ basename
 bb
 besu
 bidict
+bigint
 big0
 big1
 blobgasfee
@@ -53,6 +55,7 @@ chainid
 changelog
 chfast
 classdict
+cli
 cli2
 codeAddr
 codecopy
@@ -106,6 +109,7 @@ EngineAPI
 enum
 env
 envvar
+EOA
 eof
 EOF1
 eofparse
@@ -126,6 +130,7 @@ extcodehash
 extcodesize
 F00
 filesystem
+firstlineno
 fn
 fname
 forkchoice
@@ -248,10 +253,12 @@ parseable
 pathlib
 pdb
 perf
+permalink
 petersburg
 pformat
 png
 Pomerantz
+POS
 ppa
 ppas
 pre
@@ -337,6 +344,7 @@ time15k
 timestamp
 todo
 toml
+toplevel
 tox
 Tox
 traceback
@@ -365,6 +373,7 @@ visualstudio
 vm
 vscode
 vv
+VRS
 wd
 wds
 wei
@@ -416,6 +425,7 @@ makepyfile
 makereport
 metafunc
 modifyitems
+monkeypatching
 nodeid
 noop
 oog
@@ -449,6 +459,7 @@ substring
 substrings
 tf
 teardown
+tempdir
 testdir
 teststatus
 tmpdir
@@ -499,8 +510,10 @@ gasprice
 extcode
 extcodesize
 extcodecopy
+returndata
 returndatasize
 returndatacopy
+returndataload
 extcodehash
 blockhash
 coinbase

@@ -9,8 +9,8 @@ from ethereum_test_tools.eof.v1 import Container, Section
 from ethereum_test_tools.eof.v1.constants import NON_RETURNING_SECTION
 from ethereum_test_tools.vm.opcode import Opcodes as Op
 
+from .. import EOF_FORK_NAME
 from .helpers import slot_code_worked, value_code_worked
-from .spec import EOF_FORK_NAME
 
 REFERENCE_SPEC_GIT_PATH = "EIPS/eip-6206.md"
 REFERENCE_SPEC_VERSION = "2f365ea0cd58faa6e26013ea77ce6d538175f7d0"
@@ -90,7 +90,6 @@ def test_jumpf_target_rules(
             Section.Code(
                 code=base_code,
                 code_inputs=0,
-                code_outputs=NON_RETURNING_SECTION,
                 max_stack_height=base_height,
             ),
             source_section,
