@@ -373,6 +373,9 @@ class BlockchainTest(BaseTest):
             self.blocks.insert(0, Block(timestamp=HexNumber(12)))
             # Set timestamp for the next block to verkle transition time
             self.blocks[1].timestamp = HexNumber(32)
+            # Increment all other block numbers
+            for i, block in enumerate(self.blocks[1:]):
+                block.number = HexNumber(i + 2)
 
         for block in self.blocks:
             if block.rlp is None:
@@ -453,7 +456,7 @@ class BlockchainTest(BaseTest):
             blocks=fixture_blocks,
             last_block_hash=head,
             pre=pre,
-            post_state=alloc if vkt is None else vkt,
+            # TODO: post_state=alloc
         )
 
     def make_hive_fixture(
@@ -479,6 +482,9 @@ class BlockchainTest(BaseTest):
             self.blocks.insert(0, Block(timestamp=HexNumber(12)))
             # Set timestamp for the next block to verkle transition time
             self.blocks[1].timestamp = HexNumber(32)
+            # Increment all other block numbers
+            for i, block in enumerate(self.blocks[1:]):
+                block.number = HexNumber(i + 1)
 
         for block in self.blocks:
             new_env, header, txs, new_alloc, requests, new_vkt = self.generate_block_data(
@@ -550,7 +556,7 @@ class BlockchainTest(BaseTest):
             payloads=fixture_payloads,
             fcu_version=fcu_version,
             pre=pre,
-            post_state=alloc if vkt is None else vkt,
+            # TODO: post_state=alloc
             sync_payload=sync_payload,
         )
 
