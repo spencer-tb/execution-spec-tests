@@ -369,13 +369,15 @@ class BlockchainTest(BaseTest):
 
         # Hack for filling naive verkle transition tests
         if fork is EIP6800Transition:
-            # Add a dummy Shanghai block before the test blocks
-            self.blocks.insert(0, Block(timestamp=HexNumber(12)))
+            # Add a dummy block before the fork transition
+            self.blocks.insert(0, Block(timestamp=HexNumber(fork.transition_at() - 1)))
             # Set timestamp for the next block to verkle transition time
-            self.blocks[1].timestamp = HexNumber(32)
+            self.blocks[1].timestamp = HexNumber(fork.transition_at())
             # Increment all other block numbers
             for i, block in enumerate(self.blocks[1:]):
                 block.number = HexNumber(i + 2)
+            # Add a dummy block at the end of the test blocks
+            self.blocks.append(Block())
 
         for block in self.blocks:
             if block.rlp is None:
@@ -478,13 +480,15 @@ class BlockchainTest(BaseTest):
 
         # Hack for filling naive verkle transition tests
         if fork is EIP6800Transition:
-            # Add a dummy Shanghai block before the test blocks
-            self.blocks.insert(0, Block(timestamp=HexNumber(12)))
+            # Add a dummy block before the fork transition
+            self.blocks.insert(0, Block(timestamp=HexNumber(fork.transition_at() - 1)))
             # Set timestamp for the next block to verkle transition time
-            self.blocks[1].timestamp = HexNumber(32)
+            self.blocks[1].timestamp = HexNumber(fork.transition_at())
             # Increment all other block numbers
             for i, block in enumerate(self.blocks[1:]):
-                block.number = HexNumber(i + 1)
+                block.number = HexNumber(i + 2)
+            # Add a dummy block at the end of the test blocks
+            self.blocks.append(Block())
 
         for block in self.blocks:
             new_env, header, txs, new_alloc, requests, new_vkt = self.generate_block_data(
