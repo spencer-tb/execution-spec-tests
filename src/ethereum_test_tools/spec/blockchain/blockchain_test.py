@@ -369,15 +369,11 @@ class BlockchainTest(BaseTest):
 
         # Hack for filling naive verkle transition tests
         if fork is EIP6800Transition:
-            # Add a dummy block before the fork transition
-            self.blocks.insert(0, Block(timestamp=HexNumber(fork.transition_at() - 1)))
-            # Set timestamp for the next block to verkle transition time
-            self.blocks[1].timestamp = HexNumber(fork.transition_at())
-            # Increment all other block numbers
-            for i, block in enumerate(self.blocks[1:]):
-                block.number = HexNumber(i + 2)
-            # Add a dummy block at the end of the test blocks
-            self.blocks.append(Block())
+            self.blocks = []
+            self.blocks.append(Block(timestamp=HexNumber(fork.transition_at())))
+            post_blocks = 5
+            for _ in range(post_blocks):
+                self.blocks.append(Block())
 
         for block in self.blocks:
             if block.rlp is None:
