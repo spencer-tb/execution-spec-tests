@@ -22,6 +22,9 @@ def test_access_list(state_test: StateTestFiller, pre: Alloc):
     contract_address = pre.deploy_contract(
         Op.PC + Op.SLOAD + Op.POP + Op.PC + Op.SLOAD,
         balance=0x03,
+        storage={
+            0: 0x01,
+        }
     )
     sender = pre.fund_eoa(0x300000)
 
