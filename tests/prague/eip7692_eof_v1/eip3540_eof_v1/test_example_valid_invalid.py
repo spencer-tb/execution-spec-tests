@@ -4,7 +4,7 @@ EOF Classes example use
 
 import pytest
 
-from ethereum_test_tools import EOFTestFiller, Opcode
+from ethereum_test_tools import EOFTestFiller
 from ethereum_test_tools import Opcodes as Op
 from ethereum_test_tools.eof.v1 import Bytes, Container, EOFException, Section
 
@@ -26,7 +26,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                 sections=[
                     Section.Code(
                         code=Op.ADDRESS + Op.POP + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0xef"),
                 ],
@@ -36,78 +35,12 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
             id="simple_eof_1_deploy",
         ),
         pytest.param(
-            # Check that EOF1 undersize data is ok (4 declared, 2 provided)
-            # https://github.com/ipsilon/eof/blob/main/spec/eof.md#data-section-lifecycle
-            Container(
-                name="EOF1V0016",
-                sections=[
-                    Section.Code(
-                        code=Op.ADDRESS + Op.POP + Op.STOP,
-                        max_stack_height=1,
-                    ),
-                    Section.Data("0x0bad", custom_size=4),
-                ],
-            ),
-            "ef0001010004020001000304000400008000013050000bad",
-            EOFException.TOPLEVEL_CONTAINER_TRUNCATED,
-            id="undersize_data_not_ok_on_toplevel_container",
-        ),
-        pytest.param(
-            # Check that EOF1 with too many or too few bytes fails
-            Container(
-                name="EOF1I0006",
-                sections=[
-                    Section.Code(
-                        code=Op.ADDRESS + Op.POP + Op.STOP,
-                        max_stack_height=1,
-                    ),
-                    Section.Data("0x0bad60A70BAD", custom_size=4),
-                ],
-            ),
-            "ef0001010004020001000304000400008000013050000bad60A70BAD",
-            EOFException.INVALID_SECTION_BODIES_SIZE,
-            id="oversize_data_fail",
-        ),
-        pytest.param(
-            # Check that data section size is valid
-            Container(
-                name="EOF1V0001",
-                sections=[
-                    Section.Code(
-                        code=Op.ADDRESS + Op.POP + Op.STOP,
-                        max_stack_height=1,
-                    ),
-                    Section.Data("0x0bad60A7"),
-                ],
-            ),
-            "ef0001010004020001000304000400008000013050000bad60A7",
-            None,
-            id="data_ok",
-        ),
-        pytest.param(
-            # Check that EOF1 with an illegal opcode fails
-            Container(
-                name="EOF1I0008",
-                sections=[
-                    Section.Code(
-                        code=Op.ADDRESS + Opcode(0xEF) + Op.STOP,
-                        max_stack_height=1,
-                    ),
-                    Section.Data("0x0bad60A7"),
-                ],
-            ),
-            "ef00010100040200010003040004000080000130ef000bad60A7",
-            EOFException.UNDEFINED_INSTRUCTION,
-            id="illegal_opcode_fail",
-        ),
-        pytest.param(
             # Check that valid EOF1 can include 0xFE, the designated invalid opcode
             Container(
                 name="EOF1V0004",
                 sections=[
                     Section.Code(
                         code=Op.ADDRESS + Op.POP + Op.INVALID,
-                        max_stack_height=1,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -123,7 +56,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                 sections=[
                     Section.Code(
                         code=Op.ADDRESS + Op.POP + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0xef"),
                 ],
@@ -145,7 +77,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                         + Op.RJUMP[3]
                         + Op.RJUMP[-6]
                         + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -174,7 +105,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                 sections=[
                     Section.Code(
                         code=Op.PUSH1(1) + Op.RJUMPI[1] + Op.NOOP + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -197,15 +127,12 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                         + Op.JUMPF[3]
                         + Op.CALLF[4]
                         + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Code(
                         code=Op.PUSH0 + Op.PUSH0 + Op.RETURN,
-                        max_stack_height=2,
                     ),
                     Section.Code(
                         code=Op.PUSH0 + Op.PUSH0 + Op.REVERT,
-                        max_stack_height=2,
                     ),
                     Section.Code(code=Op.INVALID),
                     Section.Code(
@@ -233,7 +160,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                         + Op.ADDRESS
                         + Op.POP
                         + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -255,7 +181,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                         + Op.ADDRESS
                         + Op.POP
                         + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -272,7 +197,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                 sections=[
                     Section.Code(
                         code=Op.PUSH1(1) + Op.RJUMPI[1] + Op.ADDRESS + Op.NOOP + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -307,7 +231,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                         + Op.RJUMPI[2]
                         + Op.RJUMPI[-6]
                         + Op.STOP,
-                        max_stack_height=3,
                     ),
                     Section.Data("0x0bad60A7"),
                 ],
@@ -323,7 +246,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                 sections=[
                     Section.Code(
                         code=Op.PUSH1(3) + Op.JUMP + Op.JUMPDEST + Op.STOP,
-                        max_stack_height=1,
                     ),
                     Section.Data("0xef"),
                 ],
@@ -425,7 +347,6 @@ def test_code_section_header_body_mismatch(
         sections=[
             Section.Code(
                 code=Op.ADDRESS + Op.POP + Op.STOP,
-                max_stack_height=1,
             ),
             Section.Code(
                 code=Op.ADDRESS + Op.POP + Op.STOP,

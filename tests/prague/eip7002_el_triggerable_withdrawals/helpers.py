@@ -6,7 +6,7 @@ from functools import cached_property
 from itertools import count
 from typing import Callable, ClassVar, List
 
-from ethereum_test_tools import EOA, Address, Alloc
+from ethereum_test_tools import EOA, Address, Alloc, Bytecode
 from ethereum_test_tools import Opcodes as Op
 from ethereum_test_tools import Transaction
 from ethereum_test_tools import WithdrawalRequest as WithdrawalRequestBase
@@ -54,7 +54,7 @@ class WithdrawalRequest(WithdrawalRequestBase):
         withdrawal.
         """
         return self.calldata_modifier(
-            self.validator_public_key + self.amount.to_bytes(8, byteorder="big")
+            self.validator_pubkey + self.amount.to_bytes(8, byteorder="big")
         )
 
     def with_source_address(self, source_address: Address) -> "WithdrawalRequest":
@@ -159,15 +159,15 @@ class WithdrawalRequestContract(WithdrawalRequestInteractionBase):
     """
     Frame depth of the pre-deploy contract when it executes the call.
     """
-    extra_code: bytes = b""
+    extra_code: Bytecode = field(default_factory=Bytecode)
     """
     Extra code to be added to the contract code.
     """
 
     @property
-    def contract_code(self) -> bytes:
+    def contract_code(self) -> Bytecode:
         """Contract code used by the relay contract."""
-        code = b""
+        code = Bytecode()
         current_offset = 0
         for r in self.requests:
             value_arg = [r.value] if self.call_type in (Op.CALL, Op.CALLCODE) else []
@@ -274,7 +274,7 @@ def get_n_fee_increment_blocks(n: int) -> List[List[WithdrawalRequestContract]]:
                 WithdrawalRequestContract(
                     requests=[
                         WithdrawalRequest(
-                            validator_public_key=i,
+                            validator_pubkey=i,
                             amount=0,
                             fee=fee,
                         )

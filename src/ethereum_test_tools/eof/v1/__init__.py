@@ -2,18 +2,23 @@
 EVM Object Format Version 1 Library to generate bytecode for testing purposes
 """
 
-from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from functools import cached_property
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from pydantic import Field
+from pydantic import Field, GetCoreSchemaHandler
+from pydantic_core.core_schema import (
+    PlainValidatorFunctionSchema,
+    no_info_plain_validator_function,
+    to_string_ser_schema,
+)
 
 from ...common import Bytes
 from ...common.conversions import BytesConvertible
 from ...common.types import CopyValidateModel
 from ...exceptions import EOFException
+from ...vm.opcode import Bytecode
 from ...vm.opcode import Opcodes as Op
 from ..constants import EOF_HEADER_TERMINATOR, EOF_MAGIC
 from .constants import (
@@ -39,6 +44,39 @@ class SectionKind(IntEnum):
     CODE = 2
     CONTAINER = 3
     DATA = 4
+
+    def __str__(self) -> str:
+        """
+        Returns the string representation of the section kind
+        """
+        return self.name
+
+
+class ContainerKind(Enum):
+    """
+    Enum class of V1 valid container kind values.
+    """
+
+    RUNTIME = auto()
+    INITCODE = auto()
+
+    @staticmethod
+    def __get_pydantic_core_schema__(
+        source_type: Any, handler: GetCoreSchemaHandler
+    ) -> PlainValidatorFunctionSchema:
+        """
+        Calls the class constructor without info and appends the serialization schema.
+        """
+        return no_info_plain_validator_function(
+            source_type,
+            serialization=to_string_ser_schema(),
+        )
+
+    def __str__(self) -> str:
+        """
+        Returns the string representation of the container kind
+        """
+        return self.name
 
 
 class AutoSection(Enum):
@@ -236,11 +274,15 @@ class Section(CopyValidateModel):
         return h
 
     @classmethod
-    def Code(cls, code: BytesConvertible = b"", **kwargs) -> "Section":  # noqa: N802
+    def Code(  # noqa: N802
+        cls, code: BytesConvertible | Bytecode = Bytecode(), **kwargs
+    ) -> "Section":
         """
         Creates a new code section with the specified code.
         """
         kwargs.pop("kind", None)
+        if "max_stack_height" not in kwargs and isinstance(code, Bytecode):
+            kwargs["max_stack_height"] = code.max_stack_height
         return cls(kind=SectionKind.CODE, data=code, **kwargs)
 
     @classmethod
@@ -262,31 +304,7 @@ class Section(CopyValidateModel):
         return cls(kind=SectionKind.DATA, data=data, **kwargs)
 
 
-class Bytecode:
-    """Abstract class used to define a class that generates bytecode."""
-
-    @property
-    @abstractmethod
-    def bytecode(self) -> bytes:
-        """
-        Converts the sections into bytecode.
-        """
-        raise NotImplementedError
-
-    def __bytes__(self) -> bytes:
-        """
-        Returns the bytecode of the container.
-        """
-        return self.bytecode
-
-    def __len__(self) -> int:
-        """
-        Returns the length of the container bytecode.
-        """
-        return len(self.bytecode)
-
-
-class Container(CopyValidateModel, Bytecode):
+class Container(CopyValidateModel):
     """
     Class that represents an EOF V1 container.
     """
@@ -340,6 +358,10 @@ class Container(CopyValidateModel, Bytecode):
     Optional error expected for the container.
 
     TODO: Remove str
+    """
+    kind: ContainerKind = ContainerKind.RUNTIME
+    """
+    Kind type of the container.
     """
     raw_bytes: Optional[Bytes] = None
     """
@@ -421,6 +443,26 @@ class Container(CopyValidateModel, Bytecode):
         c += self.extra
 
         return c
+
+    @classmethod
+    def Code(cls, code: BytesConvertible = Bytecode(), **kwargs) -> "Container":  # noqa: N802
+        """
+        Creates simple container with a single code section.
+        """
+        kwargs.pop("kind", None)
+        return cls(sections=[Section.Code(code=code, **kwargs)])
+
+    def __bytes__(self) -> bytes:
+        """
+        Returns the bytecode of the container.
+        """
+        return self.bytecode
+
+    def __len__(self) -> int:
+        """
+        Returns the length of the container bytecode.
+        """
+        return len(self.bytecode)
 
 
 @dataclass(kw_only=True)

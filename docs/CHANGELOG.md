@@ -17,10 +17,12 @@ Test fixtures for use by clients are available for each release on the [Github r
 - ✨ Add tests for [EIP-6110: Supply validator deposits on chain](https://eips.ethereum.org/EIPS/eip-6110) ([#530](https://github.com/ethereum/execution-spec-tests/pull/530)).
 - ✨ Add tests for [EIP-7002: Execution layer triggerable withdrawals](https://eips.ethereum.org/EIPS/eip-7002) ([#530](https://github.com/ethereum/execution-spec-tests/pull/530)).
 - ✨ Add tests for [EIP-7685: General purpose execution layer requests](https://eips.ethereum.org/EIPS/eip-7685) ([#530](https://github.com/ethereum/execution-spec-tests/pull/530)).
-- ✨ Add tests for [EIP-2935: Serve historical block hashes from state](https://eips.ethereum.org/EIPS/eip-2935) ([#564](https://github.com/ethereum/execution-spec-tests/pull/564)).
+- ✨ Add tests for [EIP-2935: Serve historical block hashes from state](https://eips.ethereum.org/EIPS/eip-2935) ([#564](https://github.com/ethereum/execution-spec-tests/pull/564), [#585](https://github.com/ethereum/execution-spec-tests/pull/585)).
 - ✨ Add tests for [EIP-4200: EOF - Static relative jumps](https://eips.ethereum.org/EIPS/eip-4200) ([#581](https://github.com/ethereum/execution-spec-tests/pull/581)).
 - ✨ Add tests for [EIP-7069: EOF - Revamped CALL instructions](https://eips.ethereum.org/EIPS/eip-7069) ([#595](https://github.com/ethereum/execution-spec-tests/pull/595)).
 - 🐞 Fix typos in self-destruct collision test from erroneous pytest parametrization ([#608](https://github.com/ethereum/execution-spec-tests/pull/608)).
+- ✨ Add tests for [EIP-3540: EOF - EVM Object Format v1](https://eips.ethereum.org/EIPS/eip-3540) ([#634](https://github.com/ethereum/execution-spec-tests/pull/634)).
+- 🔀 Update EIP-7002 tests to match spec changes in [ethereum/execution-apis#549](https://github.com/ethereum/execution-apis/pull/549) ([#600](https://github.com/ethereum/execution-spec-tests/pull/600))
 
 ### 🛠️ Framework
 
@@ -43,6 +45,9 @@ Test fixtures for use by clients are available for each release on the [Github r
 - ✨ Add a new covariant marker `with_all_contract_creating_tx_types` that allows automatic parametrization of a test with all contract-creating transaction types at the current executing fork ([#602](https://github.com/ethereum/execution-spec-tests/pull/602)).
 - ✨ Tests are now encouraged to declare a `pre: Alloc` parameter to get the pre-allocation object for the test, and use `pre.deploy_contract` and `pre.fund_eoa` to deploy contracts and fund accounts respectively, instead of declaring the `pre` as a dictionary or modifying its contents directly (see the [state test tutorial](https://ethereum.github.io/execution-spec-tests/main/tutorials/state_transition/) for an updated example) ([#584](https://github.com/ethereum/execution-spec-tests/pull/584)).
 - ✨ Enable loading of [ethereum/tests/BlockchainTests](https://github.com/ethereum/tests/tree/develop/BlockchainTests) ([#596](https://github.com/ethereum/execution-spec-tests/pull/596)).
+- 🔀 Refactor `gentest` to use `ethereum_test_tools.rpc.rpc` by adding to `get_transaction_by_hash`, `debug_trace_call` to `EthRPC` ([#568](https://github.com/ethereum/execution-spec-tests/pull/568)).
+- ✨ Write a properties file to the output directory and enable direct generation of a fixture tarball from `fill` via `--output=fixtures.tgz`([#627](https://github.com/ethereum/execution-spec-tests/pull/627)).
+- ✨ Some opcodes now support keyword arguments for their parameters ([#648](https://github.com/ethereum/execution-spec-tests/pull/648))
 
 ### 🔧 EVM Tools
 
@@ -63,6 +68,7 @@ Test fixtures for use by clients are available for each release on the [Github r
 
 - Cancun is now the latest deployed fork, and the development fork is now Prague ([#489](https://github.com/ethereum/execution-spec-tests/pull/489)).
 - Stable fixtures artifact `fixtures.tar.gz` has been renamed to `fixtures_stable.tar.gz` ([#573](https://github.com/ethereum/execution-spec-tests/pull/573))
+- EOF fixtures now contain an `containerKind` optional field that specifies whether the container should be interpreted as a runtime container (default when the field is missing) or initcode container, with string `RUNTIME` or `INITCODE` respectively ([#651](https://github.com/ethereum/execution-spec-tests/pull/651))
 
 ## 🔜 [v2.1.1](https://github.com/ethereum/execution-spec-tests/releases/tag/v2.1.1) - 2024-03-09
 

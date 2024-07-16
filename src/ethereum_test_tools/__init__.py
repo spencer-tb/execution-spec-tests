@@ -6,7 +6,6 @@ tests.
 from .code import (
     CalldataCase,
     Case,
-    Code,
     CodeGasMeasure,
     Conditional,
     Initcode,
@@ -62,7 +61,7 @@ from .spec import (
     TestInfo,
 )
 from .spec.blockchain.types import Block, Header
-from .vm import Macro, Macros, Opcode, OpcodeCallArg, Opcodes
+from .vm import Bytecode, Macro, Macros, Opcode, OpcodeCallArg, Opcodes, UndefinedOpcodes
 
 __all__ = (
     "SPEC_TYPES",
@@ -76,9 +75,9 @@ __all__ = (
     "BlockchainTest",
     "BlockchainTestFiller",
     "BlockException",
+    "Bytecode",
     "CalldataCase",
     "Case",
-    "Code",
     "CodeGasMeasure",
     "Conditional",
     "DepositRequest",
@@ -98,6 +97,7 @@ __all__ = (
     "Opcode",
     "OpcodeCallArg",
     "Opcodes",
+    "UndefinedOpcodes",
     "ReferenceSpec",
     "ReferenceSpecTypes",
     "Removable",
