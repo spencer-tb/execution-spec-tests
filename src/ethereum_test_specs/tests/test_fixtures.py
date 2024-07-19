@@ -100,8 +100,8 @@ def test_make_genesis(fork: Fork, hash: bytes):  # noqa: D103
     [
         (Istanbul, FixtureFormats.BLOCKCHAIN_TEST),
         (London, FixtureFormats.BLOCKCHAIN_TEST),
-        (Paris, FixtureFormats.BLOCKCHAIN_TEST_HIVE),
-        (Shanghai, FixtureFormats.BLOCKCHAIN_TEST_HIVE),
+        (Paris, FixtureFormats.BLOCKCHAIN_TEST_ENGINE),
+        (Shanghai, FixtureFormats.BLOCKCHAIN_TEST_ENGINE),
         (Paris, FixtureFormats.STATE_TEST),
         (Shanghai, FixtureFormats.STATE_TEST),
     ],
@@ -193,7 +193,7 @@ class TestFillBlockchainValidTxs:
         if fork == London and not check_hive:
             return "blockchain_london_valid_filled.json"
         elif fork == Shanghai and check_hive:
-            return "blockchain_shanghai_valid_filled_hive.json"
+            return "blockchain_shanghai_valid_filled_engine.json"
         raise ValueError(f"Unexpected fork/check_hive combination: {fork}/{check_hive}")
 
     @pytest.fixture
@@ -460,7 +460,7 @@ class TestFillBlockchainValidTxs:
     @pytest.fixture
     def fixture_format(self, check_hive: bool):  # noqa: D102
         return (
-            FixtureFormats.BLOCKCHAIN_TEST_HIVE if check_hive else FixtureFormats.BLOCKCHAIN_TEST
+            FixtureFormats.BLOCKCHAIN_TEST_ENGINE if check_hive else FixtureFormats.BLOCKCHAIN_TEST
         )
 
     @pytest.fixture
@@ -550,7 +550,7 @@ class TestFillBlockchainValidTxs:
     "fork,check_hive,expected_json_file",
     [
         (London, False, "blockchain_london_invalid_filled.json"),
-        (Shanghai, True, "blockchain_shanghai_invalid_filled_hive.json"),
+        (Shanghai, True, "blockchain_shanghai_invalid_filled_engine.json"),
     ],
 )
 def test_fill_blockchain_invalid_txs(fork: Fork, check_hive: bool, expected_json_file: str):
@@ -856,7 +856,7 @@ def test_fill_blockchain_invalid_txs(fork: Fork, check_hive: bool, expected_json
 
     t8n = GethTransitionTool()
     fixture_format = (
-        FixtureFormats.BLOCKCHAIN_TEST_HIVE if check_hive else FixtureFormats.BLOCKCHAIN_TEST
+        FixtureFormats.BLOCKCHAIN_TEST_ENGINE if check_hive else FixtureFormats.BLOCKCHAIN_TEST
     )
     generated_fixture = BlockchainTest(
         pre=pre,
