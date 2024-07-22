@@ -4,9 +4,9 @@ EOF Classes example use
 
 import pytest
 
-from ethereum_test_tools import EOFTestFiller
+from ethereum_test_tools import EOFException, EOFTestFiller
 from ethereum_test_tools import Opcodes as Op
-from ethereum_test_tools.eof.v1 import Bytes, Container, EOFException, Section
+from ethereum_test_tools.eof.v1 import Container, Section
 
 from .. import EOF_FORK_NAME
 
@@ -59,7 +59,7 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
                     ),
                     Section.Data("0xef"),
                 ],
-                header_terminator=Bytes(b"\xFF"),
+                header_terminator=b"\xFF",
             ),
             "ef00010100040200010003040001ff00800001305000ef",
             EOFException.MISSING_TERMINATOR,
@@ -84,19 +84,6 @@ pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
             "ef0001010004020001000E04000400008000015FE10003E00003E00003E0FFFA000bad60A7",
             None,
             id="rjump_valid",
-        ),
-        pytest.param(
-            # Sections with unreachable code fail
-            Container(
-                name="EOF1I0023",
-                sections=[
-                    Section.Code(code=Op.RJUMP[1] + Op.NOOP + Op.STOP),
-                    Section.Data("0x0bad60A7"),
-                ],
-            ),
-            "ef000101000402000100050400040000800000E000015B000bad60A7",
-            EOFException.UNREACHABLE_INSTRUCTIONS,
-            id="unreachable_code",
         ),
         pytest.param(
             # Check that code that uses a new style conditional jump succeeds

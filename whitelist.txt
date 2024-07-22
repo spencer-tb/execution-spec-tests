@@ -25,6 +25,7 @@ big0
 big1
 blobgasfee
 blockchain
+BlockchainFixtures
 BlockchainTest
 BlockchainTestFiller
 BlockchainTests
@@ -201,6 +202,7 @@ incrementing
 ini
 init
 initcode
+inputdata
 instantiation
 io
 islice
@@ -273,6 +275,7 @@ Pomerantz
 POS
 ppa
 ppas
+prague
 pre
 Pre
 precompile
@@ -384,6 +387,8 @@ util
 utils
 v0
 v1
+v2
+v3
 validator
 validators
 venv
@@ -486,6 +491,7 @@ tmpdir
 tryfirst
 trylast
 usefixtures
+verifier
 writelines
 xfail
 ZeroPaddedHexNumber
@@ -648,6 +654,7 @@ return
 delegatecall
 eofcreate
 extcall
+extcalls
 extdelegatecall
 staticcall
 extstaticcall

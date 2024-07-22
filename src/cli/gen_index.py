@@ -1,6 +1,7 @@
 """
 Generate an index file of all the json fixtures in the specified directory.
 """
+
 import datetime
 import json
 import os
@@ -18,10 +19,10 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
-from ethereum_test_tools.common.base_types import HexNumber
-from ethereum_test_tools.spec.consume.types import IndexFile, TestCaseIndexFile
-from ethereum_test_tools.spec.file.types import Fixtures
-from evm_transition_tool import FixtureFormats
+from ethereum_test_base_types import HexNumber
+from ethereum_test_fixtures import FixtureFormats
+from ethereum_test_fixtures.consume import IndexFile, TestCaseIndexFile
+from ethereum_test_fixtures.file import Fixtures
 
 from .hasher import HashableItem
 
@@ -41,12 +42,12 @@ fixtures_to_skip = set(
 def count_json_files_exclude_index(start_path: Path) -> int:
     """
     Return the number of json files in the specified directory, excluding
-    index.json files and tests in "blockchain_tests_hive".
+    index.json files and tests in "blockchain_tests_engine".
     """
     json_file_count = sum(
         1
         for file in start_path.rglob("*.json")
-        if file.name != "index.json" and "blockchain_tests_hive" not in file.parts
+        if file.name != "index.json" and "blockchain_tests_engine" not in file.parts
     )
     return json_file_count
 
@@ -55,8 +56,8 @@ def infer_fixture_format_from_path(file: Path) -> FixtureFormats:
     """
     Attempt to infer the fixture format from the file path.
     """
-    if "blockchain_tests_hive" in file.parts:
-        return FixtureFormats.BLOCKCHAIN_TEST_HIVE
+    if "blockchain_tests_engine" in file.parts:
+        return FixtureFormats.BLOCKCHAIN_TEST_ENGINE
     if "blockchain_tests" in file.parts:
         return FixtureFormats.BLOCKCHAIN_TEST
     if "BlockchainTests" in file.parts:  # ethereum/tests
@@ -178,8 +179,6 @@ def generate_fixtures_index(
         test_cases: List[TestCaseIndexFile] = []
         for file in input_path.rglob("*.json"):
             if file.name == "index.json":
-                continue
-            if "blockchain_tests_hive" in file.parts:
                 continue
             if any(fixture in str(file) for fixture in fixtures_to_skip):
                 rich.print(f"Skipping '{file}'")

@@ -8,6 +8,8 @@ from typing import Mapping, SupportsBytes
 import pytest
 from semver import Version
 
+from ethereum_test_base_types import Account, Address, Bytes, Hash, TestAddress, TestPrivateKey
+from ethereum_test_fixtures import FixtureFormats
 from ethereum_test_forks import (
     Cancun,
     Fork,
@@ -16,12 +18,12 @@ from ethereum_test_forks import (
     get_closest_fork_with_solc_support,
     get_deployed_forks,
 )
-from evm_transition_tool import FixtureFormats, GethTransitionTool
+from ethereum_test_specs import StateTest
+from ethereum_test_types import Alloc, Environment, Transaction
+from ethereum_test_vm import Opcodes as Op
+from evm_transition_tool import GethTransitionTool
 
 from ..code import CalldataCase, Case, Conditional, Initcode, Solc, Switch, Yul
-from ..common import Account, Alloc, Bytes, Environment, Hash, Transaction
-from ..spec import StateTest
-from ..vm.opcode import Opcodes as Op
 from .conftest import SOLC_PADDING_VERSION
 
 
@@ -617,11 +619,15 @@ def test_switch(tx_data: bytes, switch_bytecode: bytes, expected_storage: Mappin
     """
     Test that the switch opcode macro gets executed as using the t8n tool.
     """
-    pre = Alloc()
-    code_address = pre.deploy_contract(switch_bytecode)
-    sender = pre.fund_eoa(10_000_000)
-    tx = Transaction(to=code_address, data=tx_data, gas_limit=1_000_000, sender=sender)
-    post = {sender: Account(nonce=1), code_address: Account(storage=expected_storage)}
+    code_address = Address(0x1000)
+    pre = Alloc(
+        {
+            code_address: Account(code=switch_bytecode),
+            TestAddress: Account(balance=10_000_000),
+        }
+    )
+    tx = Transaction(to=code_address, data=tx_data, gas_limit=1_000_000, secret_key=TestPrivateKey)
+    post = {TestAddress: Account(nonce=1), code_address: Account(storage=expected_storage)}
     state_test = StateTest(
         env=Environment(),
         pre=pre,

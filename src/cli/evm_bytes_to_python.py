@@ -6,8 +6,8 @@ from typing import Any, List, Optional
 
 import click
 
-from ethereum_test_tools import Macro
-from ethereum_test_tools import Opcodes as Op
+from ethereum_test_vm import Macro
+from ethereum_test_vm import Opcodes as Op
 
 
 def process_evm_bytes(evm_bytes_hex_string: Any) -> str:  # noqa: D103
@@ -31,9 +31,16 @@ def process_evm_bytes(evm_bytes_hex_string: Any) -> str:  # noqa: D103
             raise ValueError(f"Unknown opcode: {opcode_byte}")
 
         if opcode.data_portion_length > 0:
-            data_portion = evm_bytes[: opcode.data_portion_length]
+            data_portion = hex(int.from_bytes(evm_bytes[: opcode.data_portion_length], "big"))
             evm_bytes = evm_bytes[opcode.data_portion_length :]
-            opcodes_strings.append(f'Op.{opcode._name_}("0x{data_portion.hex()}")')
+            opcodes_strings.append(f"Op.{opcode._name_}[{data_portion}]")
+        elif opcode == Op.RJUMPV:
+            max_index = evm_bytes.pop(0)
+            operands: List[str] = []
+            for _ in range(max_index + 1):
+                operands.append(hex(int.from_bytes(evm_bytes[:2], "big")))
+                evm_bytes = evm_bytes[2:]
+            opcodes_strings.append(f"Op.{opcode._name_}[{','.join(operands)}]")
         else:
             opcodes_strings.append(f"Op.{opcode._name_}")
 

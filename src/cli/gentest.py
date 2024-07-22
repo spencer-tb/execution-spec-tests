@@ -59,8 +59,9 @@ from typing import Dict, List, TextIO
 
 import click
 
-from ethereum_test_tools import Account, Address, Transaction, common
-from ethereum_test_tools.rpc.rpc import BlockNumberType, EthRPC
+from ethereum_test_base_types import Account, Address, ZeroPaddedHexNumber
+from ethereum_test_tools.rpc import BlockNumberType, DebugRPC, EthRPC
+from ethereum_test_types import Transaction
 
 
 @click.command()
@@ -165,8 +166,8 @@ class TestConstructor:
 
                 if account_obj.storage is not None:
                     for record, value in account_obj.storage.root.items():
-                        pad_record = common.ZeroPaddedHexNumber(record)
-                        pad_value = common.ZeroPaddedHexNumber(value)
+                        pad_record = ZeroPaddedHexNumber(record)
+                        pad_value = ZeroPaddedHexNumber(value)
                         state_str += f'{pad}    "{pad_record}" : "{pad_value}",\n'
 
                 state_str += pad + "}\n"
@@ -288,6 +289,7 @@ class RequestManager:
             "CF-Access-Client-Secret": node_config.secret,
         }
         self.rpc = EthRPC(node_config.node_url, extra_headers=headers)
+        self.debug_rpc = DebugRPC(node_config.node_url, extra_headers=headers)
 
     def eth_get_transaction_by_hash(self, transaction_hash: str) -> RemoteTransaction:
         """
@@ -336,7 +338,7 @@ class RequestManager:
         """
         Get pre-state required for transaction
         """
-        return self.rpc.debug_trace_call(
+        return self.debug_rpc.trace_call(
             {
                 "from": f"{str(tr.transaction.sender)}",
                 "to": f"{str(tr.transaction.to)}",
