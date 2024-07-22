@@ -2,7 +2,7 @@
 Types used in the transition tool interactions.
 """
 
-from typing import List, Optional
+from typing import List
 
 from pydantic import Field
 
@@ -87,6 +87,15 @@ class Result(CamelModel):
     deposit_requests: List[DepositRequest] | None = None
     withdrawal_requests: List[WithdrawalRequest] | None = None
 
+    # Verkle Specific Fields
+    verkle_conversion_address: Address | None = Field(None, alias="currentConversionAddress")
+    verkle_conversion_slot_hash: Hash | None = Field(None, alias="currentConversionSlotHash")
+    verkle_conversion_started: bool | None = Field(None, alias="currentConversionStarted")
+    verkle_conversion_ended: bool | None = Field(None, alias="currentConversionEnded")
+    verkle_conversion_storage_processed: bool | None = Field(
+        None, alias="currentConversionStorageProcessed"
+    )
+
 
 class TransitionToolInput(CamelModel):
     """
@@ -96,7 +105,7 @@ class TransitionToolInput(CamelModel):
     alloc: Alloc
     txs: List[Transaction]
     env: Environment
-    vkt: Optional[VerkleTree]
+    vkt: VerkleTree | None = None
 
 
 class TransitionToolOutput(CamelModel):
@@ -107,4 +116,4 @@ class TransitionToolOutput(CamelModel):
     alloc: Alloc
     result: Result
     body: Bytes | None = None
-    vkt: Optional[VerkleTree]
+    vkt: VerkleTree | None = None

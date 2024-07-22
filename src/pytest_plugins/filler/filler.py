@@ -26,8 +26,7 @@ from ethereum_test_forks import (
     get_closest_fork_with_solc_support,
     get_forks_with_solc_support,
 )
-from ethereum_test_specs import SPEC_TYPES, BaseTest
-from ethereum_test_tools import Yul
+from ethereum_test_tools import SPEC_TYPES, BaseTest, Yul
 from ethereum_test_tools.code import Solc
 from ethereum_test_tools.utility.versioning import (
     generate_github_url,

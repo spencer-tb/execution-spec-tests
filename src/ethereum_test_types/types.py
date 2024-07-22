@@ -46,7 +46,6 @@ from ethereum_test_base_types.conversions import (
 )
 from ethereum_test_exceptions import TransactionException
 from ethereum_test_forks import Fork
-from evm_transition_tool import Result
 
 
 # Sentinel classes
@@ -265,7 +264,7 @@ class Alloc(BaseAlloc):
         self,
         code: BytesConvertible,
         *,
-        storage: Storage = {},
+        storage: Storage,
         balance: NumberConvertible = 0,
         nonce: NumberConvertible = 1,
         address: Address | None = None,
@@ -457,7 +456,7 @@ class Environment(EnvironmentGeneric[Number]):
 
         return self.copy(**updated_values)
 
-    def update_from_result(self, result: Result) -> "Environment":
+    def update_from_result(self, result: Any) -> "Environment":
         """
         Updates the environment with the result of a transition tool execution.
         """
@@ -1086,3 +1085,11 @@ class Requests(RootModel[List[DepositRequest | WithdrawalRequest]]):
         Returns the list of withdrawal requests.
         """
         return [w for w in self.root if isinstance(w, WithdrawalRequest)]
+
+
+class VerkleTree(RootModel[Dict[str, str]]):
+    """
+    Definition of a verkle tree return from the geth t8n.
+    """
+
+    root: Dict[str, str] = Field(default_factory=dict)
