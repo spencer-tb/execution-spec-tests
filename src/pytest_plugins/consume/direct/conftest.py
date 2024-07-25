@@ -53,17 +53,21 @@ def pytest_addoption(parser):  # noqa: D103
 
 
 def pytest_configure(config):  # noqa: D103
-    evm = TransitionTool.from_binary_path(
-        binary_path=config.getoption("evm_bin"),
-        # TODO: The verify_fixture() method doesn't currently use this option.
-        trace=config.getoption("evm_collect_traces"),
-    )
-    try:
-        blocktest_help_string = evm.get_blocktest_help()
-    except NotImplementedError as e:
-        pytest.exit(str(e))
-    config.evm = evm
-    config.evm_run_single_test = "--run" in blocktest_help_string
+    markers = config.getoption("-m", "")
+    if "consume_direct" in markers or "consume_all" in markers:
+        evm = TransitionTool.from_binary_path(
+            binary_path=config.getoption("evm_bin"),
+            # TODO: The verify_fixture() method doesn't currently use this option.
+            trace=config.getoption("evm_collect_traces"),
+        )
+        try:
+            blocktest_help_string = evm.get_blocktest_help()
+        except NotImplementedError as e:
+            pytest.exit(str(e))
+        config.evm = evm
+        config.evm_run_single_test = "--run" in blocktest_help_string
+    else:
+        pass
 
 
 @pytest.fixture(autouse=True, scope="session")

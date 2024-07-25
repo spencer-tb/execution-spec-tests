@@ -239,8 +239,6 @@ def consume_via_rlp(pytest_args, help_flag, pytest_help_flag):
         "--rootdir",
         "./",
         consume_test_paths("rlp"),
-        "-p",
-        "pytest_plugins.pytest_hive.pytest_hive",
     ]
     args += get_hive_flags_from_env()
     if not input_provided(args) and not sys.stdin.isatty():  # command is receiving input on stdin
@@ -262,8 +260,6 @@ def consume_via_engine_api(pytest_args, help_flag, pytest_help_flag):
         "--rootdir",
         "./",
         consume_test_paths("engine"),
-        "-p",
-        "pytest_plugins.pytest_hive.pytest_hive",
     ]
     args += get_hive_flags_from_env()
     if not input_provided(args) and not sys.stdin.isatty():  # command is receiving input on stdin
@@ -284,8 +280,6 @@ def consume_all(pytest_args, help_flag, pytest_help_flag):
         "pytest-consume.ini",
         "--rootdir",
         "./",
-        "-p",
-        "pytest_plugins.pytest_hive.pytest_hive",
     ] + all_consume_test_paths()
     args += get_hive_flags_from_env()
     if not sys.stdin.isatty():  # the command is receiving input on stdin
