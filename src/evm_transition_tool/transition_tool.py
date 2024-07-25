@@ -367,16 +367,15 @@ class TransitionTool(FixtureVerifier):
         for key, file_path in output_paths.items():
             if "txs.rlp" in file_path:
                 continue
-            if os.path.exists(file_path):
-                with open(file_path, "r+") as file:
-                    output_contents[key] = json.load(file)
-
+            with open(file_path, "r+") as file:
+                output_contents[key] = json.load(file)
+        output = TransitionToolOutput(**output_contents)
         if self.trace:
-            self.collect_traces(output_contents["result"]["receipts"], temp_dir, debug_output_path)
+            self.collect_traces(output.result.receipts, temp_dir, debug_output_path)
 
         temp_dir.cleanup()
 
-        return TransitionToolOutput(**output_contents)
+        return output
 
     def _evaluate_stream(
         self,
@@ -408,8 +407,8 @@ class TransitionTool(FixtureVerifier):
 
         if debug_output_path:
             files_to_dump = {
-                "output/alloc.json": output.alloc.model_dump(mode="json", **model_dump_config),
-                "output/result.json": output.result.model_dump(mode="json", **model_dump_config),
+                "output/alloc.json": output.alloc,
+                "output/result.json": output.result,
                 "output/txs.rlp": str(output.body),
             }
             # Only dump verkle if present
@@ -488,8 +487,8 @@ class TransitionTool(FixtureVerifier):
 
         files_to_dump = {
             "args.py": args,
-            "input/alloc.json": stdin.alloc.model_dump(mode="json", **model_dump_config),
-            "input/env.json": stdin.env.model_dump(mode="json", **model_dump_config),
+            "input/alloc.json": stdin.alloc,
+            "input/env.json": stdin.env,
             "input/txs.json": [
                 tx.model_dump(mode="json", **model_dump_config) for tx in stdin.txs
             ],

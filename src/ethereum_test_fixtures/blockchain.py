@@ -26,6 +26,9 @@ from ethereum_test_base_types import (
 from ethereum_test_exceptions import EngineAPIError, ExceptionInstanceOrList
 from ethereum_test_forks import Fork
 from ethereum_test_types.types import (
+    AuthorizationTupleGeneric,
+    ConsolidationRequest,
+    ConsolidationRequestGeneric,
     DepositRequest,
     DepositRequestGeneric,
     Requests,
@@ -211,6 +214,7 @@ class FixtureExecutionPayload(CamelModel):
     withdrawals: List[Withdrawal] | None = None
     deposit_requests: List[DepositRequest] | None = None
     withdrawal_requests: List[WithdrawalRequest] | None = None
+    consolidation_requests: List[ConsolidationRequest] | None = None
 
     @classmethod
     def from_fixture_header(
@@ -230,6 +234,9 @@ class FixtureExecutionPayload(CamelModel):
             withdrawals=withdrawals,
             deposit_requests=requests.deposit_requests() if requests is not None else None,
             withdrawal_requests=requests.withdrawal_requests() if requests is not None else None,
+            consolidation_requests=requests.consolidation_requests()
+            if requests is not None
+            else None,
         )
 
 
@@ -315,10 +322,29 @@ class FixtureEngineNewPayload(CamelModel):
         return new_payload
 
 
+class FixtureAuthorizationTuple(AuthorizationTupleGeneric[ZeroPaddedHexNumber]):
+    """
+    Authorization tuple for fixture transactions.
+    """
+
+    signer: Address | None = None
+
+    @classmethod
+    def from_authorization_tuple(
+        cls, auth_tuple: AuthorizationTupleGeneric
+    ) -> "FixtureAuthorizationTuple":
+        """
+        Returns a FixtureAuthorizationTuple from an AuthorizationTuple.
+        """
+        return cls(**auth_tuple.model_dump())
+
+
 class FixtureTransaction(TransactionFixtureConverter, TransactionGeneric[ZeroPaddedHexNumber]):
     """
     Representation of an Ethereum transaction within a test Fixture.
     """
+
+    authorization_list: List[FixtureAuthorizationTuple] | None = None
 
     @classmethod
     def from_transaction(cls, tx: Transaction) -> "FixtureTransaction":
@@ -370,6 +396,22 @@ class FixtureWithdrawalRequest(WithdrawalRequestGeneric[ZeroPaddedHexNumber]):
         return cls(**d.model_dump())
 
 
+class FixtureConsolidationRequest(ConsolidationRequestGeneric[ZeroPaddedHexNumber]):
+    """
+    Structure to represent a single consolidation request to be processed by the beacon
+    chain.
+    """
+
+    @classmethod
+    def from_consolidation_request(
+        cls, d: ConsolidationRequestGeneric
+    ) -> "FixtureConsolidationRequest":
+        """
+        Returns a FixtureConsolidationRequest from a ConsolidationRequest.
+        """
+        return cls(**d.model_dump())
+
+
 class FixtureBlockBase(CamelModel):
     """Representation of an Ethereum block within a test Fixture without RLP bytes."""
 
@@ -379,6 +421,7 @@ class FixtureBlockBase(CamelModel):
     withdrawals: List[FixtureWithdrawal] | None = None
     deposit_requests: List[FixtureDepositRequest] | None = None
     withdrawal_requests: List[FixtureWithdrawalRequest] | None = None
+    consolidation_requests: List[FixtureConsolidationRequest] | None = None
 
     @computed_field(alias="blocknumber")  # type: ignore[misc]
     @cached_property

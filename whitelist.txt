@@ -110,6 +110,7 @@ eips
 EIPs
 eip6110
 eip7002
+eip7251
 el
 endianness
 EngineAPI
@@ -137,6 +138,7 @@ extcodehash
 extcodesize
 F00
 filesystem
+fillvalue
 firstlineno
 fn
 fname
@@ -337,6 +339,7 @@ StateTest
 StateTests
 StateTestFiller
 staticcalled
+stdin
 stExample
 str
 streetsidesoftware
