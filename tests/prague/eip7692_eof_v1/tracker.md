@@ -37,7 +37,8 @@
 - [ ] Container sections present, truncated before data section header (ethereum/tests: ./src/EOFTestsFiller/validInvalidFiller.yml)
 - [ ] Truncated before data section size (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml src/EOFTestsFiller/efValidation/EOF1_incomplete_section_size_Copier.json)
 - [ ] Truncated data section size (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml src/EOFTestsFiller/efValidation/EOF1_incomplete_section_size_Copier.json)
-- [ ] Truncated before header terminator (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml src/EOFTestsFiller/efValidation/EOF1_header_not_terminated_Copier.json)
+- [x] Truncated before header terminator (ethereum/tests: src/EOFTestsFiller/efValidation/EOF1_header_not_terminated_Copier.json)
+- [ ] Truncated before header terminator (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml)
 - [ ] Truncated before type section (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml src/EOFTestsFiller/efValidation/EOF1_truncated_section_Copier.json)
 - [ ] Type section truncated before outputs (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml)
 - [ ] Type section truncated before max_stack_height (ethereum/tests: ./src/EOFTestsFiller/EIP3540/validInvalidFiller.yml)
@@ -218,9 +219,9 @@
 - [ ] EOFCREATE is not a valid terminating instruction (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_eofcreate_invalid_Copier.json)
 - [ ] EOFCREATE immediate referring to non-existing container (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_eofcreate_invalid_Copier.json)
 - [ ] EOFCREATE immediate referring to container with truncated data (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_eofcreate_invalid_Copier.json)
-- [ ] Valid RETURNCONTRACTs referring to various container numbers (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_valid_Copier.json)
-- [ ] Truncated before RETURNCONTRACT immediate (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_invalid_Copier.json)
-- [ ] RETURNCONTRACT immediate referring to non-existing container (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_invalid_Copier.json)
-- [ ] Unreachable code after RETURNCONTRACT, check that RETURNCONTRACT is terminating (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_invalid_Copier.json)
+- [x] Valid RETURNCONTRACTs referring to various container numbers (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_valid_Copier.json)
+- [x] Truncated before RETURNCONTRACT immediate (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_invalid_Copier.json)
+- [x] RETURNCONTRACT immediate referring to non-existing container (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_invalid_Copier.json)
+- [x] Unreachable code after RETURNCONTRACT, check that RETURNCONTRACT is terminating (ethereum/tests: ./src/EOFTestsFiller/efValidation/EOF1_returncontract_invalid_Copier.json)
 
 ## EIP-7698: EOF - Creation transaction

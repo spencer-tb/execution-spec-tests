@@ -16,15 +16,21 @@ jobs:
             python: '3.12'
             evm-type: 'stable'
             tox-cmd: 'tox run-parallel --parallel-no-spinner'
-          - os: ubuntu-latest
-            python: '3.11'
-            evm-type: 'develop'
-            tox-cmd: 'tox -e tests-develop'
+          # Disabled due to unavailable evm implementation for devnet-1
+          # - os: ubuntu-latest
+          #   python: '3.11'
+          #   evm-type: 'develop'
+          #   tox-cmd: 'tox -e tests-develop'
           # Disabled to not be gated by evmone implementation
           # - os: ubuntu-latest
           #   python: '3.11'
           #   evm-type: 'eip7692'
           #   tox-cmd: 'tox -e tests-eip7692'
+          # Disabled for now until verkle testing framework is refined
+          # - os: ubuntu-latest
+          #   python: '3.11'
+          #   evm-type: 'eip6800'
+          #   tox-cmd: 'tox -e tests-eip6800'
           - os: macos-latest
             python: '3.11'
             evm-type: 'stable'

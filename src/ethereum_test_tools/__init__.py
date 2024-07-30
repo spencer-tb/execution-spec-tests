@@ -3,34 +3,47 @@ Module containing tools for generating cross-client Ethereum execution layer
 tests.
 """
 
-from .code import (
-    CalldataCase,
-    Case,
-    Code,
-    CodeGasMeasure,
-    Conditional,
-    Initcode,
-    Switch,
-    Yul,
-    YulCompiler,
-)
-from .common import (
-    EOA,
-    AccessList,
+from ethereum_test_base_types import (
     Account,
     Address,
-    Alloc,
-    DepositRequest,
-    EngineAPIError,
-    Environment,
     Hash,
-    Removable,
-    Storage,
     TestAddress,
     TestAddress2,
-    TestParameterGroup,
     TestPrivateKey,
     TestPrivateKey2,
+)
+from ethereum_test_base_types.reference_spec import ReferenceSpec, ReferenceSpecTypes
+from ethereum_test_exceptions import (
+    BlockException,
+    EngineAPIError,
+    EOFException,
+    TransactionException,
+)
+from ethereum_test_fixtures import BaseFixture, FixtureCollector, TestInfo
+from ethereum_test_specs import (
+    SPEC_TYPES,
+    BaseTest,
+    BlockchainTest,
+    BlockchainTestFiller,
+    EOFStateTest,
+    EOFStateTestFiller,
+    EOFTest,
+    EOFTestFiller,
+    StateTest,
+    StateTestFiller,
+)
+from ethereum_test_specs.blockchain import Block, Header
+from ethereum_test_types import (
+    EOA,
+    AccessList,
+    Alloc,
+    AuthorizationTuple,
+    ConsolidationRequest,
+    DepositRequest,
+    Environment,
+    Removable,
+    Storage,
+    TestParameterGroup,
     Transaction,
     VerkleTree,
     Withdrawal,
@@ -44,25 +57,26 @@ from .common import (
     cost_memory_bytes,
     eip_2028_transaction_data_cost,
 )
-from .exceptions import BlockException, EOFException, TransactionException
-from .reference_spec import ReferenceSpec, ReferenceSpecTypes
-from .spec import (
-    SPEC_TYPES,
-    BaseFixture,
-    BaseTest,
-    BlockchainTest,
-    BlockchainTestFiller,
-    EOFStateTest,
-    EOFStateTestFiller,
-    EOFTest,
-    EOFTestFiller,
-    FixtureCollector,
-    StateTest,
-    StateTestFiller,
-    TestInfo,
+from ethereum_test_vm import (
+    Bytecode,
+    Macro,
+    Macros,
+    Opcode,
+    OpcodeCallArg,
+    Opcodes,
+    UndefinedOpcodes,
 )
-from .spec.blockchain.types import Block, Header
-from .vm import Macro, Macros, Opcode, OpcodeCallArg, Opcodes
+
+from .code import (
+    CalldataCase,
+    Case,
+    CodeGasMeasure,
+    Conditional,
+    Initcode,
+    Switch,
+    Yul,
+    YulCompiler,
+)
 
 __all__ = (
     "SPEC_TYPES",
@@ -70,17 +84,19 @@ __all__ = (
     "Account",
     "Address",
     "Alloc",
+    "AuthorizationTuple",
     "BaseFixture",
     "BaseTest",
     "Block",
     "BlockchainTest",
     "BlockchainTestFiller",
     "BlockException",
+    "Bytecode",
     "CalldataCase",
     "Case",
-    "Code",
     "CodeGasMeasure",
     "Conditional",
+    "ConsolidationRequest",
     "DepositRequest",
     "EngineAPIError",
     "Environment",
@@ -98,6 +114,7 @@ __all__ = (
     "Opcode",
     "OpcodeCallArg",
     "Opcodes",
+    "UndefinedOpcodes",
     "ReferenceSpec",
     "ReferenceSpecTypes",
     "Removable",
@@ -128,4 +145,5 @@ __all__ = (
     "cost_memory_bytes",
     "eip_2028_transaction_data_cost",
     "eip_2028_transaction_data_cost",
+    "vm",
 )

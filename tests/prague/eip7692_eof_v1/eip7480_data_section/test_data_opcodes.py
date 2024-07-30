@@ -1,12 +1,11 @@
 """
-Execution of CALLF, RETF opcodes within EOF V1 containers tests
+Execution of DATA* opcodes within EOF V1 containers tests
 """
 
 import pytest
 
 from ethereum_test_tools import Account, Alloc, Environment, StateTestFiller, Transaction
 from ethereum_test_tools.eof.v1 import Container, Section
-from ethereum_test_tools.eof.v1.constants import MAX_CODE_SECTIONS
 from ethereum_test_tools.vm.opcode import Opcodes as Op
 
 from .. import EOF_FORK_NAME
@@ -15,62 +14,6 @@ REFERENCE_SPEC_GIT_PATH = "EIPS/eip-7480.md"
 REFERENCE_SPEC_VERSION = "3ee1334ef110420685f1c8ed63e80f9e1766c251"
 
 pytestmark = pytest.mark.valid_from(EOF_FORK_NAME)
-
-contract_call_within_deep_nested_callf = Container(
-    name="contract_call_within_deep_nested_callf",
-    sections=[
-        Section.Code(
-            code=(Op.CALLF[1] + Op.SSTORE(0, 1) + Op.STOP),
-            max_stack_height=2,
-        )
-    ]
-    + [
-        # All sections call next section and on return, store a 1
-        # to their call stack height key
-        Section.Code(
-            code=(Op.CALLF[i] + Op.SSTORE(i - 1, 1) + Op.RETF),
-            code_inputs=0,
-            code_outputs=0,
-            max_stack_height=2,
-        )
-        for i in range(2, MAX_CODE_SECTIONS)
-    ]
-    + [
-        # Last section makes external contract call
-        Section.Code(
-            code=(
-                Op.EXTCALL(0x200, 0, 0, 0) + Op.SSTORE(MAX_CODE_SECTIONS - 1, Op.ISZERO) + Op.RETF
-            ),
-            code_inputs=0,
-            code_outputs=0,
-            max_stack_height=4,
-        )
-    ],
-)
-
-recursive_contract_call_within_deep_nested_callf = Container(
-    name="recursive_contract_call_within_deep_nested_callf",
-    sections=[
-        # All sections call next section and on return, store a 1
-        # to their call stack height key
-        Section.Code(
-            code=(Op.CALLF[i + 1] + Op.PUSH1(1) + Op.PUSH2(i) + Op.SSTORE + Op.STOP),
-            max_stack_height=2,
-        )
-        for i in range(MAX_CODE_SECTIONS - 1)
-    ]
-    + [
-        # Last section makes external contract call
-        Section.Code(
-            code=(
-                Op.SSTORE(MAX_CODE_SECTIONS - 1, Op.CALL(Op.GAS, 0x200, 0, 0, 0, 0, 0)) + Op.RETF
-            ),
-            code_inputs=0,
-            code_outputs=0,
-            max_stack_height=7,
-        )
-    ],
-)
 
 
 def create_data_test(offset: int, datasize: int):
@@ -95,31 +38,26 @@ def create_data_test(offset: int, datasize: int):
                         + Op.SSTORE(0, 1)
                         + Op.STOP
                     ),
-                    max_stack_height=2,
                 ),
                 Section.Code(
                     code=(Op.PUSH2(offset) + Op.DATALOAD + Op.PUSH1(1) + Op.SSTORE + Op.RETF),
                     code_inputs=0,
                     code_outputs=0,
-                    max_stack_height=2,
                 ),
                 Section.Code(
                     code=(dataloadn_op + Op.PUSH1(2) + Op.SSTORE + Op.RETF),
                     code_inputs=0,
                     code_outputs=0,
-                    max_stack_height=2,
                 ),
                 Section.Code(
                     code=(Op.DATASIZE + Op.PUSH1(3) + Op.SSTORE + Op.RETF),
                     code_inputs=0,
                     code_outputs=0,
-                    max_stack_height=2,
                 ),
                 Section.Code(
                     code=(Op.DATACOPY(0, offset, 32) + Op.SSTORE(4, Op.MLOAD(0)) + Op.RETF),
                     code_inputs=0,
                     code_outputs=0,
-                    max_stack_height=3,
                 ),
                 Section.Data(data),
             ],

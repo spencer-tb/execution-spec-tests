@@ -6,10 +6,15 @@ stable:
 develop:
   impl: geth
   repo: lightclient/go-ethereum
-  ref: prague-devnet-0
+  ref: prague-devnet-1
   evm-bin: evm
 eip7692:
   impl: evmone
   repo: ethereum/evmone
   ref: master
   evm-bin: evmone-t8n
+eip6800:
+  impl: geth
+  repo: gballet/go-ethereum
+  ref: base-root-last-merkle-root-merge 
+  evm-bin: evm

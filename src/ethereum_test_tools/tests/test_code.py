@@ -8,6 +8,8 @@ from typing import Mapping, SupportsBytes
 import pytest
 from semver import Version
 
+from ethereum_test_base_types import Account, Address, Bytes, Hash, TestAddress, TestPrivateKey
+from ethereum_test_fixtures import FixtureFormats
 from ethereum_test_forks import (
     Cancun,
     Fork,
@@ -16,44 +18,13 @@ from ethereum_test_forks import (
     get_closest_fork_with_solc_support,
     get_deployed_forks,
 )
-from evm_transition_tool import FixtureFormats, GethTransitionTool
+from ethereum_test_specs import StateTest
+from ethereum_test_types import Alloc, Environment, Transaction
+from ethereum_test_vm import Opcodes as Op
+from evm_transition_tool import GethTransitionTool
 
-from ..code import CalldataCase, Case, Code, Conditional, Initcode, Solc, Switch, Yul
-from ..common import Account, Alloc, Environment, Hash, Transaction
-from ..spec import StateTest
-from ..vm.opcode import Opcodes as Op
+from ..code import CalldataCase, Case, Conditional, Initcode, Solc, Switch, Yul
 from .conftest import SOLC_PADDING_VERSION
-
-
-@pytest.mark.parametrize(
-    "code,expected_bytes",
-    [
-        ("", bytes()),
-        ("0x", bytes()),
-        ("0x01", bytes.fromhex("01")),
-        ("01", bytes.fromhex("01")),
-    ],
-)
-def test_code_init(code: str | bytes | SupportsBytes, expected_bytes: bytes):
-    """
-    Test `ethereum_test.types.code`.
-    """
-    assert bytes(Code(code)) == expected_bytes
-
-
-@pytest.mark.parametrize(
-    "code,expected_bytes",
-    [
-        (Code("0x01") + "0x02", bytes.fromhex("0102")),
-        ("0x01" + Code("0x02"), bytes.fromhex("0102")),
-        ("0x01" + Code("0x02") + "0x03", bytes.fromhex("010203")),
-    ],
-)
-def test_code_operations(code: Code, expected_bytes: bytes):
-    """
-    Test `ethereum_test.types.code`.
-    """
-    assert bytes(code) == expected_bytes
 
 
 @pytest.fixture(params=get_deployed_forks())
@@ -65,19 +36,23 @@ def fork(request: pytest.FixtureRequest):
 
 
 @pytest.fixture()
-def yul_code(request: pytest.FixtureRequest, fork: Fork, padding_before: str, padding_after: str):
+def yul_code(
+    request: pytest.FixtureRequest,
+    fork: Fork,
+    padding_before: str | None,
+    padding_after: str | None,
+) -> bytes:
     """Return the Yul code for the test."""
     yul_code_snippets = request.param
+    compiled_yul_code = b""
     if padding_before is not None:
-        compiled_yul_code = Code(padding_before)
-    else:
-        compiled_yul_code = Code("")
+        compiled_yul_code += Bytes(padding_before)
     for yul_code in yul_code_snippets:
-        compiled_yul_code += Yul(
-            yul_code, fork=get_closest_fork_with_solc_support(fork, Solc().version)
+        compiled_yul_code += bytes(
+            Yul(yul_code, fork=get_closest_fork_with_solc_support(fork, Solc().version))
         )
     if padding_after is not None:
-        compiled_yul_code += Code(padding_after)
+        compiled_yul_code += Bytes(padding_after)
     return compiled_yul_code
 
 
@@ -183,7 +158,7 @@ def test_yul(  # noqa: D103
     "initcode,bytecode",
     [
         pytest.param(
-            Initcode(deploy_code=bytes()),
+            Initcode(),
             bytes(
                 [
                     0x61,
@@ -202,7 +177,7 @@ def test_yul(  # noqa: D103
             id="empty-deployed-code",
         ),
         pytest.param(
-            Initcode(deploy_code=bytes(), initcode_prefix=bytes([0x00])),
+            Initcode(initcode_prefix=Op.STOP),
             bytes(
                 [
                     0x00,
@@ -222,7 +197,7 @@ def test_yul(  # noqa: D103
             id="empty-deployed-code-with-prefix",
         ),
         pytest.param(
-            Initcode(deploy_code=bytes(), initcode_length=20),
+            Initcode(initcode_length=20),
             bytes(
                 [
                     0x61,
@@ -242,7 +217,7 @@ def test_yul(  # noqa: D103
             id="empty-deployed-code-with-padding",
         ),
         pytest.param(
-            Initcode(deploy_code=bytes([0x00]), initcode_length=20),
+            Initcode(deploy_code=Op.STOP, initcode_length=20),
             bytes(
                 [
                     0x61,
@@ -264,7 +239,7 @@ def test_yul(  # noqa: D103
         ),
         pytest.param(
             Initcode(
-                deploy_code=bytes([0x00]),
+                deploy_code=Op.STOP,
                 initcode_prefix=Op.SSTORE(0, 1),
                 initcode_length=20,
             ),
@@ -328,7 +303,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                     Case(condition=Op.EQ(Op.CALLDATALOAD(0), 1), action=Op.SSTORE(0, 1)),
                     Case(condition=Op.EQ(Op.CALLDATALOAD(0), 2), action=Op.SSTORE(0, 2)),
                 ],
-                default_action=b"",
+                default_action=None,
             ),
             {0: 1},
             id="no-default-action-condition-met",
@@ -340,7 +315,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                     CalldataCase(value=1, action=Op.SSTORE(0, 1)),
                     CalldataCase(value=2, action=Op.SSTORE(0, 2)),
                 ],
-                default_action=b"",
+                default_action=None,
             ),
             {0: 1},
             id="no-default-action-condition-met-calldata",
@@ -352,7 +327,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                     Case(condition=Op.EQ(Op.CALLDATALOAD(0), 1), action=Op.SSTORE(0, 1)),
                     Case(condition=Op.EQ(Op.CALLDATALOAD(0), 2), action=Op.SSTORE(0, 2)),
                 ],
-                default_action=b"",
+                default_action=None,
             ),
             {0: 0},
             id="no-default-action-no-condition-met",
@@ -535,7 +510,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                     Case(condition=Op.EQ(1, 1), action=Op.SSTORE(0, 2)),
                     Case(condition=Op.EQ(1, 2), action=Op.SSTORE(0, 1)),
                 ],
-                default_action=b"",
+                default_action=None,
             ),
             {0: 2},
             id="no-calldataload-condition-met",
@@ -553,7 +528,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                     Case(condition=Op.EQ(1, 1), action=Op.SSTORE(0, 2) + Op.SSTORE(1, 2)),
                     Case(condition=Op.EQ(1, 2), action=Op.SSTORE(0, 1)),
                 ],
-                default_action=b"",
+                default_action=None,
             ),
             {0: 2, 1: 2},
             id="no-calldataload-condition-met-different-length-actions",
@@ -583,7 +558,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                         action=Op.SSTORE(0, 1),
                     ),
                 ],
-                default_action=b"",
+                default_action=None,
             ),
             {0: 2, 1: 2},
             id="different-length-conditions-condition-met-different-length-actions",
@@ -614,7 +589,7 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
                         action=Op.SSTORE(0, 1),
                     ),
                 ],
-                default_action=b"",
+                default_action=None,
             )
             + Op.SSTORE(0x11, 1),
             {0: 2, 1: 2, 0x10: 1, 0x11: 1},
@@ -644,11 +619,15 @@ def test_switch(tx_data: bytes, switch_bytecode: bytes, expected_storage: Mappin
     """
     Test that the switch opcode macro gets executed as using the t8n tool.
     """
-    pre = Alloc()
-    code_address = pre.deploy_contract(switch_bytecode)
-    sender = pre.fund_eoa(10_000_000)
-    tx = Transaction(to=code_address, data=tx_data, gas_limit=1_000_000, sender=sender)
-    post = {sender: Account(nonce=1), code_address: Account(storage=expected_storage)}
+    code_address = Address(0x1000)
+    pre = Alloc(
+        {
+            code_address: Account(code=switch_bytecode),
+            TestAddress: Account(balance=10_000_000),
+        }
+    )
+    tx = Transaction(to=code_address, data=tx_data, gas_limit=1_000_000, secret_key=TestPrivateKey)
+    post = {TestAddress: Account(nonce=1), code_address: Account(storage=expected_storage)}
     state_test = StateTest(
         env=Environment(),
         pre=pre,

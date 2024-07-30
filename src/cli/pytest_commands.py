@@ -37,7 +37,7 @@ print(result.output)
 import os
 import sys
 import warnings
-from typing import Any, Callable, List, Literal
+from typing import Any, Callable, List, Literal, get_args
 
 import click
 import pytest
@@ -107,7 +107,7 @@ def handle_help_flags(
         return list(pytest_args)
 
 
-def handle_stdout_flags(args):
+def handle_stdout_flags(args: List[str]) -> List[str]:
     """
     If the user has requested to write to stdout, add pytest arguments in order
     to suppress pytest's test session header and summary output.
@@ -123,6 +123,15 @@ def handle_stdout_flags(args):
         if any(arg == "-n" or arg.startswith("-n=") for arg in args):
             sys.exit("error: xdist-plugin not supported with --output=stdout (remove -n args).")
         args.extend(["-qq", "-s", "--no-html"])
+    return args
+
+
+def handle_timing_data_flag(args: List[str]) -> List[str]:
+    """
+    Consume only. If the user requests timing data ensure stdout is captured.
+    """
+    if "--timing-data" in args and "-s" not in args:
+        args.append("-s")
     return args
 
 
@@ -166,14 +175,32 @@ def get_hive_flags_from_env():
     return pytest_args
 
 
-ConsumeCommands = Literal["dirct", "rlp", "engine", "all"]
+ConsumeCommands = Literal["direct", "rlp", "engine"]
 
 
-def consume_ini_path(consume_command: ConsumeCommands) -> str:
+def consume_test_paths(consume_command: ConsumeCommands) -> str:
     """
-    Get the path to the ini file for the specified consume command.
+    Get the test path for the specified consume command.
     """
-    return f"src/pytest_plugins/consume/ini_files/pytest-consume-{consume_command}.ini"
+    consume_path = "src/pytest_plugins/consume"
+    if consume_command == "direct":
+        return f"{consume_path}/{consume_command}/test_{consume_command}.py"
+    else:  # rlp or engine
+        return f"{consume_path}/hive_simulators/{consume_command}/test_via_{consume_command}.py"
+
+
+def all_consume_test_paths() -> list:
+    """
+    Get all test paths within the consume suite.
+    """
+    return [consume_test_paths(command) for command in get_args(ConsumeCommands)]
+
+
+def input_provided(args) -> bool:
+    """
+    Returns true if `--input` is provided via the command line.
+    """
+    return any(arg.startswith("--input") for arg in args)
 
 
 @click.group()
@@ -191,8 +218,9 @@ def consume_direct(pytest_args, help_flag, pytest_help_flag):
     Clients consume directly via the `blocktest` interface.
     """
     args = handle_help_flags(pytest_args, help_flag, pytest_help_flag)
-    args += ["-c", consume_ini_path("direct"), "--rootdir", "./"]
-    if not sys.stdin.isatty():  # the command is receiving input on stdin
+    args = handle_timing_data_flag(args)
+    args += ["-c", "pytest-consume.ini", "--rootdir", "./", consume_test_paths("direct")]
+    if not input_provided(args) and not sys.stdin.isatty():  # command is receiving input on stdin
         args.extend(["-s", "--input=stdin"])
     pytest.main(args)
 
@@ -204,9 +232,18 @@ def consume_via_rlp(pytest_args, help_flag, pytest_help_flag):
     Clients consume RLP-encoded blocks on startup.
     """
     args = handle_help_flags(pytest_args, help_flag, pytest_help_flag)
-    args += ["-c", consume_ini_path("rlp"), "--rootdir", "./"]
+    args = handle_timing_data_flag(args)
+    args += [
+        "-c",
+        "pytest-consume.ini",
+        "--rootdir",
+        "./",
+        consume_test_paths("rlp"),
+        "-p",
+        "pytest_plugins.pytest_hive.pytest_hive",
+    ]
     args += get_hive_flags_from_env()
-    if not sys.stdin.isatty():  # the command is receiving input on stdin
+    if not input_provided(args) and not sys.stdin.isatty():  # command is receiving input on stdin
         args.extend(["-s", "--input=stdin"])
     pytest.main(args)
 
@@ -218,9 +255,18 @@ def consume_via_engine_api(pytest_args, help_flag, pytest_help_flag):
     Clients consume via the Engine API.
     """
     args = handle_help_flags(pytest_args, help_flag, pytest_help_flag)
-    args += ["-c", consume_ini_path("engine"), "--rootdir", "./"]
+    args = handle_timing_data_flag(args)
+    args += [
+        "-c",
+        "pytest-consume.ini",
+        "--rootdir",
+        "./",
+        consume_test_paths("engine"),
+        "-p",
+        "pytest_plugins.pytest_hive.pytest_hive",
+    ]
     args += get_hive_flags_from_env()
-    if not sys.stdin.isatty():  # the command is receiving input on stdin
+    if not input_provided(args) and not sys.stdin.isatty():  # command is receiving input on stdin
         args.extend(["-s", "--input=stdin"])
     pytest.main(args)
 
@@ -232,7 +278,15 @@ def consume_all(pytest_args, help_flag, pytest_help_flag):
     Clients consume via all available methods (direct, rlp, engine).
     """
     args = handle_help_flags(pytest_args, help_flag, pytest_help_flag)
-    args += ["-c", consume_ini_path("all"), "--rootdir", "./"]
+    args = handle_timing_data_flag(args)
+    args += [
+        "-c",
+        "pytest-consume.ini",
+        "--rootdir",
+        "./",
+        "-p",
+        "pytest_plugins.pytest_hive.pytest_hive",
+    ] + all_consume_test_paths()
     args += get_hive_flags_from_env()
     if not sys.stdin.isatty():  # the command is receiving input on stdin
         args.extend(["-s", "--input=stdin"])

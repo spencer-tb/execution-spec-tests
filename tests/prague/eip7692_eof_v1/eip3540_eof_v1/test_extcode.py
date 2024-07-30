@@ -39,15 +39,15 @@ def test_legacy_calls_eof_sstore(
         Op.SSTORE(storage_test.store_next(4), Op.EXTCODESIZE(address_legacy_contract))
         + Op.EXTCODECOPY(address_legacy_contract, 0, 0, Op.EXTCODESIZE(address_legacy_contract))
         + Op.SSTORE(
-            storage_test.store_next(legacy_code + (b"\0" * (32 - len(legacy_code)))),
+            storage_test.store_next(bytes(legacy_code) + (b"\0" * (32 - len(legacy_code)))),
             Op.MLOAD(0),
         )
         + Op.SSTORE(
-            storage_test.store_next(keccak256(legacy_code)),
+            storage_test.store_next(legacy_code.keccak256()),
             Op.EXTCODEHASH(address_legacy_contract),
         )
         + Op.SSTORE(storage_test.store_next(2), Op.EXTCODESIZE(address_eof_contract))
-        + Op.EXTCODECOPY(address_eof_contract, 0x20, 0, Op.EXTCODESIZE(address_eof_contract))
+        + Op.EXTCODECOPY(address_eof_contract, 0x20, 0, 6)
         + Op.SSTORE(storage_test.store_next(b"\xef" + (b"\0" * 31)), Op.MLOAD(0x20))
         + Op.SSTORE(
             storage_test.store_next(keccak256(b"\xef\x00")),

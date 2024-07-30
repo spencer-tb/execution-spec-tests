@@ -55,7 +55,6 @@ def test_initcode_revert(state_test: StateTestFiller, pre: Alloc, revert: bytes)
         sections=[
             Section.Code(
                 code=Op.MSTORE(0, Op.PUSH32(revert)) + Op.REVERT(32 - revert_size, revert_size),
-                max_stack_height=2,
             ),
         ],
     )
@@ -70,7 +69,6 @@ def test_initcode_revert(state_test: StateTestFiller, pre: Alloc, revert: bytes)
                 + Op.SSTORE(slot_returndata, Op.MLOAD(0))
                 + Op.SSTORE(slot_code_worked, value_code_worked)
                 + Op.STOP,
-                max_stack_height=4,
             ),
             Section.Container(container=initcode_subcontainer),
         ],
@@ -115,7 +113,6 @@ def test_initcode_aborts(
                     code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, 0))
                     + Op.SSTORE(slot_code_worked, value_code_worked)
                     + Op.STOP,
-                    max_stack_height=4,
                 ),
                 Section.Container(
                     container=Container(
@@ -153,7 +150,7 @@ def test_initcode_aborts(
 Size of the factory portion of test_eofcreate_deploy_sizes, but as the runtime code is dynamic, we
 have to use a pre-calculated size
 """
-factory_size = 30
+factory_size = 74
 
 
 @pytest.mark.parametrize(
@@ -190,7 +187,6 @@ def test_eofcreate_deploy_sizes(
             Section.Code(
                 code=Op.JUMPDEST * (target_deploy_size - len(smallest_runtime_subcontainer))
                 + Op.STOP,
-                max_stack_height=0,
             ),
         ]
     )
@@ -200,33 +196,31 @@ def test_eofcreate_deploy_sizes(
         sections=[
             Section.Code(
                 code=Op.RETURNCONTRACT[0](0, 0),
-                max_stack_height=2,
             ),
             Section.Container(container=runtime_container),
         ],
     )
 
+    factory_container = Container(
+        sections=[
+            Section.Code(
+                code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, 0))
+                + Op.SSTORE(slot_code_worked, value_code_worked)
+                + Op.STOP,
+            ),
+            Section.Container(container=initcode_subcontainer),
+        ]
+    )
+
     assert factory_size == (
-        len(initcode_subcontainer) - len(runtime_container)
+        len(factory_container) - len(runtime_container)
     ), "factory_size is wrong, expected factory_size is %d, calculated is %d" % (
         factory_size,
-        len(initcode_subcontainer),
+        len(factory_container),
     )
 
     sender = pre.fund_eoa()
-    contract_address = pre.deploy_contract(
-        code=Container(
-            sections=[
-                Section.Code(
-                    code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, 0))
-                    + Op.SSTORE(slot_code_worked, value_code_worked)
-                    + Op.STOP,
-                    max_stack_height=4,
-                ),
-                Section.Container(container=initcode_subcontainer),
-            ]
-        )
-    )
+    contract_address = pre.deploy_contract(code=factory_container)
     # Storage in 0 should have the address,
     # Storage 1 is a canary of 1 to make sure it tried to execute, which also covers cases of
     #   data+code being greater than initcode_size_max, which is allowed.
@@ -300,7 +294,6 @@ def test_auxdata_size_failures(state_test: StateTestFiller, pre: Alloc, auxdata_
             Section.Code(
                 code=Op.CALLDATACOPY(0, 0, Op.CALLDATASIZE)
                 + Op.RETURNCONTRACT[0](0, Op.CALLDATASIZE),
-                max_stack_height=3,
             ),
             Section.Container(container=smallest_runtime_subcontainer),
         ],
@@ -315,7 +308,6 @@ def test_auxdata_size_failures(state_test: StateTestFiller, pre: Alloc, auxdata_
                     + Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, Op.CALLDATASIZE))
                     + Op.SSTORE(slot_code_worked, value_code_worked)
                     + Op.STOP,
-                    max_stack_height=4,
                 ),
                 Section.Container(container=initcode_subcontainer),
             ]
@@ -374,7 +366,6 @@ def test_eofcreate_insufficient_stipend(
                 code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](value, 0, 0, 0))
                 + Op.SSTORE(slot_code_worked, value_code_worked)
                 + Op.STOP,
-                max_stack_height=4,
             ),
             Section.Container(container=smallest_initcode_subcontainer),
         ]
@@ -420,7 +411,6 @@ def test_insufficient_initcode_gas(
         sections=[
             Section.Code(
                 code=Op.RETURNCONTRACT[0](0, 0),
-                max_stack_height=2,
             ),
             Section.Container(container=smallest_runtime_subcontainer),
             Section.Data(data=initcode_data),
@@ -435,7 +425,6 @@ def test_insufficient_initcode_gas(
                     code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, 0))
                     + Op.SSTORE(slot_code_should_fail, value_code_worked)
                     + Op.STOP,
-                    max_stack_height=4,
                 ),
                 Section.Container(container=initcode_container),
             ],
@@ -485,7 +474,6 @@ def test_insufficient_gas_memory_expansion(
                 code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, auxdata_size))
                 + Op.SSTORE(slot_code_should_fail, slot_code_worked)
                 + Op.STOP,
-                max_stack_height=4,
             ),
             Section.Container(container=smallest_initcode_subcontainer),
         ],
@@ -545,7 +533,6 @@ def test_insufficient_returncontract_auxdata_gas(
         sections=[
             Section.Code(
                 code=Op.RETURNCONTRACT[0](0, auxdata_size),
-                max_stack_height=2,
             ),
             Section.Container(container=smallest_runtime_subcontainer),
         ],
@@ -559,7 +546,6 @@ def test_insufficient_returncontract_auxdata_gas(
                     code=Op.SSTORE(slot_create_address, Op.EOFCREATE[0](0, 0, 0, 0))
                     + Op.SSTORE(slot_code_should_fail, value_code_worked)
                     + Op.STOP,
-                    max_stack_height=4,
                 ),
                 Section.Container(container=initcode_container),
             ],
