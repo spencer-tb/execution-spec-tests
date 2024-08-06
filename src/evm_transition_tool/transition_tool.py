@@ -17,7 +17,8 @@ from typing import Dict, List, Mapping, Optional, Type
 
 from ethereum_test_fixtures import FixtureFormats, FixtureVerifier
 from ethereum_test_forks import Fork
-from ethereum_test_types import Alloc, Environment, Transaction, VerkleTree
+from ethereum_test_types import Alloc, Environment, Transaction
+from ethereum_test_types.verkle import VerkleTree
 
 from .file_utils import dump_files_to_directory, write_json_file
 from .types import TransactionReceipt, TransitionToolInput, TransitionToolOutput
@@ -310,8 +311,15 @@ class TransitionTool(FixtureVerifier):
 
         # TODO: Verkle specific logic, update when Verkle fork is confirmed.
         if t8n_data.fork_name == "Verkle":
-            output_paths["vkt"] = os.path.join("output", "vkt.json")
-            args.extend(["--output.vkt", output_paths["vkt"]])
+            output_paths.update(
+                {
+                    "vkt": os.path.join("output", "vkt.json"),
+                    "witness": os.path.join("output", "witness.json"),
+                }
+            )
+            args.extend(
+                ["--output.vkt", output_paths["vkt"], "--output.witness", output_paths["witness"]]
+            )
             if t8n_data.vkt is not None:
                 args.extend(["--input.vkt", input_paths["vkt"]])
 
