@@ -44,10 +44,10 @@ from ethereum_test_types import (
     Removable,
     Requests,
     Transaction,
-    VerkleTree,
     Withdrawal,
     WithdrawalRequest,
 )
+from ethereum_test_types.verkle import VerkleAlloc, VerkleTree
 from evm_transition_tool import TransitionTool
 
 from .base import BaseTest, verify_result, verify_transactions
@@ -401,8 +401,7 @@ class BlockchainTest(BaseTest):
         fork: Fork,
         block: Block,
         previous_env: Environment,
-        previous_alloc: Alloc,
-        previous_vkt: Optional[VerkleTree] = None,
+        previous_alloc: Alloc | VerkleAlloc,
         eips: Optional[List[int]] = None,
     ) -> Tuple[
         Environment,
@@ -410,7 +409,6 @@ class BlockchainTest(BaseTest):
         List[Transaction],
         Alloc,
         Optional[Requests],
-        Optional[VerkleTree],
     ]:
         """
         Generate common block data for both make_fixture and make_hive_fixture.
@@ -443,7 +441,6 @@ class BlockchainTest(BaseTest):
             txs=txs,
             env=env,
             fork=fork,
-            vkt=previous_vkt,
             chain_id=self.chain_id,
             reward=fork.get_reward(env.number, env.timestamp),
             eips=eips,
@@ -556,15 +553,14 @@ class BlockchainTest(BaseTest):
         self,
         env: Environment,
         t8n: TransitionTool,
-        alloc: Alloc,
-        vkt: Optional[VerkleTree] = None,
+        alloc: Alloc | VerkleAlloc,
     ):
         """
         Verifies the post state after all block/s or payload/s are generated.
         """
         try:
             if env.verkle_conversion_started or env.verkle_conversion_ended:
-                if vkt is not None:
+                if isinstance(alloc, VerkleAlloc) and alloc.vkt is not None:
                     pass  # TODO: skip exact account verify checks
                     # verify_post_vkt(t8n=t8n, expected_post=self.post, got_vkt=vkt)
                 else:
@@ -588,6 +584,7 @@ class BlockchainTest(BaseTest):
 
         pre, genesis = self.make_genesis(fork, t8n)
 
+        alloc: Alloc | VerkleAlloc
         alloc = pre
         env = environment_from_parent_header(genesis.header)
         head = genesis.header.block_hash
@@ -598,7 +595,7 @@ class BlockchainTest(BaseTest):
             env.verkle_conversion_ended = True
             # convert alloc to vkt
             vkt = t8n.from_mpt_to_vkt(alloc)
-            alloc = Alloc()
+            alloc = VerkleAlloc(vkt=vkt, mpt=alloc)
 
         # Hack for filling naive verkle transition tests
         if fork is EIP6800Transition:
@@ -617,13 +614,12 @@ class BlockchainTest(BaseTest):
                 # This is the most common case, the RLP needs to be constructed
                 # based on the transactions to be included in the block.
                 # Set the environment according to the block to execute.
-                new_env, header, txs, new_alloc, requests, new_vkt = self.generate_block_data(
+                new_env, header, txs, new_alloc, requests = self.generate_block_data(
                     t8n=t8n,
                     fork=fork,
                     block=block,
                     previous_env=env,
                     previous_alloc=alloc,
-                    previous_vkt=vkt,
                     eips=eips,
                 )
                 fixture_block = FixtureBlockBase(
@@ -666,7 +662,6 @@ class BlockchainTest(BaseTest):
                     alloc = new_alloc
                     env = apply_new_parent(new_env, header)
                     head = header.block_hash
-                    vkt = new_vkt
                 else:
                     fixture_blocks.append(
                         InvalidFixtureBlock(
