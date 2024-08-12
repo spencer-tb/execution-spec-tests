@@ -455,7 +455,7 @@ def pytest_generate_tests(metafunc):
                             )
                         ),
                     )
-                    if fork.name() in metafunc.config.unsupported_forks
+                    if fork in metafunc.config.unsupported_forks
                     else ForkParametrizer(fork=fork)
                 )
                 for fork in intersection_range
