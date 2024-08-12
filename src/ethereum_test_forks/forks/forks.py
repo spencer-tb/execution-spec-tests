@@ -225,26 +225,18 @@ class Byzantium(Homestead):
         return [5, 6, 7, 8] + super(Byzantium, cls).precompiles(block_number, timestamp)
 
 
-class Constantinople(Byzantium):
+class ConstantinopleFix(Byzantium, solc_name="constantinople"):
     """
-    Constantinople fork
+    ConstantinopleFix fork
     """
 
     @classmethod
     def get_reward(cls, block_number: int = 0, timestamp: int = 0) -> int:
         """
-        At Constantinople, the block reward is reduced to
+        At ConstantinopleFix, the block reward is reduced to
         2_000_000_000_000_000_000 wei
         """
         return 2_000_000_000_000_000_000
-
-
-class ConstantinopleFix(Constantinople, solc_name="constantinople"):
-    """
-    Constantinople Fix fork
-    """
-
-    pass
 
 
 class Istanbul(ConstantinopleFix):

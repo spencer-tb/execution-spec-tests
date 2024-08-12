@@ -8,15 +8,8 @@ from pathlib import Path
 from re import compile
 from typing import Optional
 
-from ethereum_test_forks import Constantinople, ConstantinopleFix, Fork
-
 from .geth import GethTransitionTool
 from .transition_tool import FixtureFormats
-
-UNSUPPORTED_FORKS = (
-    Constantinople,
-    ConstantinopleFix,
-)
 
 
 class ExecutionSpecsTransitionTool(GethTransitionTool):
@@ -93,13 +86,6 @@ class ExecutionSpecsTransitionTool(GethTransitionTool):
     detect_binary_pattern = compile(r"^ethereum-spec-evm\b")
     statetest_subcommand: Optional[str] = None
     blocktest_subcommand: Optional[str] = None
-
-    def is_fork_supported(self, fork: Fork) -> bool:
-        """
-        Returns True if the fork is supported by the tool.
-        Currently, ethereum-spec-evm provides no way to determine supported forks.
-        """
-        return fork not in UNSUPPORTED_FORKS
 
     def get_blocktest_help(self) -> str:
         """
