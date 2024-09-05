@@ -23,15 +23,15 @@ from .common import common_click_options, handle_help_flags
 @common_click_options
 def execute(
     pytest_args: Tuple[str, ...],
-    help_flag: bool,
     hive_mode_flag: bool,
-    pytest_help_flag: bool,
+    **kwargs,
 ) -> None:
     """
     Entry point for the execute command.
     """
     ini_file = "pytest-execute-hive.ini" if hive_mode_flag else "pytest-execute.ini"
+    pytest_type = "execute-hive" if hive_mode_flag else "execute"
     default_args = ("-c", ini_file)
-    args = handle_help_flags(list(pytest_args + default_args), help_flag, pytest_help_flag)
+    args = handle_help_flags(list(pytest_args + default_args), pytest_type=pytest_type)
     result = pytest.main(args)
     sys.exit(result)

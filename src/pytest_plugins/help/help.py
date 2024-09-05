@@ -28,6 +28,20 @@ def pytest_addoption(parser):
         default=False,
         help="Show help options specific to the consume command and exit.",
     )
+    help_group.addoption(
+        "--execute-help",
+        action="store_true",
+        dest="show_execute_help",
+        default=False,
+        help="Show help options specific to the execute command and exit.",
+    )
+    help_group.addoption(
+        "--execute-hive-help",
+        action="store_true",
+        dest="show_execute_hive_help",
+        default=False,
+        help="Show help options specific to the execute (hive-mode) command and exit.",
+    )
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -45,11 +59,33 @@ def pytest_configure(config):
                 "fork range",
                 "filler location",
                 "defining debug",
-                "pre-allocation behavior",
+                "pre-allocation behavior during test filling",
             ],
         )
     elif config.getoption("show_consume_help"):
-        show_specific_help(config, "pytest-consume.ini", ["consuming"])
+        show_specific_help(
+            config,
+            "pytest-consume.ini",
+            [
+                "consuming",
+            ],
+        )
+    elif config.getoption("show_execute_help"):
+        show_specific_help(
+            config,
+            "pytest-execute.ini",
+            [
+                "execute",
+                "remote RPC configuration",
+                "pre-allocation behavior during test execution",
+            ],
+        )
+    elif config.getoption("show_execute_hive_help"):
+        show_specific_help(
+            config,
+            "pytest-execute-hive.ini",
+            ["execute", "hive RPC client", "pre-allocation behavior during test execution"],
+        )
 
 
 def show_specific_help(config, expected_ini, substrings):

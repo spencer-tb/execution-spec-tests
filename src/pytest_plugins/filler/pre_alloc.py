@@ -39,7 +39,9 @@ def pytest_addoption(parser: pytest.Parser):
     """
     Adds command-line options to pytest.
     """
-    pre_alloc_group = parser.getgroup("pre_alloc", "Arguments defining pre-allocation behavior.")
+    pre_alloc_group = parser.getgroup(
+        "pre_alloc", "Arguments defining pre-allocation behavior during test filling."
+    )
 
     pre_alloc_group.addoption(
         "--strict-alloc",
