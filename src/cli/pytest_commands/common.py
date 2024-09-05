@@ -49,7 +49,11 @@ def handle_help_flags(pytest_args: List[str], pytest_type: str) -> List[str]:
     ctx = click.get_current_context()
 
     if ctx.params.get("help_flag"):
-        return [f"--{pytest_type}-help"] if pytest_type in {"consume", "fill"} else pytest_args
+        return (
+            [f"--{pytest_type}-help"]
+            if pytest_type in {"consume", "fill", "execute", "execute-hive"}
+            else pytest_args
+        )
     elif ctx.params.get("pytest_help_flag"):
         return ["--help"]
 
