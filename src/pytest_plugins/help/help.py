@@ -94,7 +94,9 @@ def show_specific_help(config, expected_ini, substrings):
     """
     pytest_ini = Path(config.inifile)
     if pytest_ini.name != expected_ini:
-        raise ValueError(f"Unexpected {expected_ini} file option generating help.")
+        raise ValueError(
+            f"Unexpected {expected_ini}!={pytest_ini.name} file option generating help."
+        )
 
     test_parser = argparse.ArgumentParser()
     for group in config._parser.optparser._action_groups:

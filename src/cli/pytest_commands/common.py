@@ -2,7 +2,7 @@
 Common functions for CLI pytest-based entry points.
 """
 
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List
 
 import click
 
@@ -38,6 +38,14 @@ def common_click_options(func: Callable[..., Any]) -> Decorator:
     return click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)(func)
 
 
+REQUIRED_FLAGS: Dict[str, List] = {
+    "fill": [],
+    "consume": [],
+    "execute": ["--rpc-endpoint", "x", "--rpc-seed-key", "x"],
+    "execute-hive": [],
+}
+
+
 def handle_help_flags(pytest_args: List[str], pytest_type: str) -> List[str]:
     """
     Modifies the help arguments passed to the click CLI command before forwarding to
@@ -50,7 +58,7 @@ def handle_help_flags(pytest_args: List[str], pytest_type: str) -> List[str]:
 
     if ctx.params.get("help_flag"):
         return (
-            [f"--{pytest_type}-help"]
+            [f"--{pytest_type}-help", *REQUIRED_FLAGS[pytest_type]]
             if pytest_type in {"consume", "fill", "execute", "execute-hive"}
             else pytest_args
         )

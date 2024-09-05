@@ -29,9 +29,9 @@ def execute(
     """
     Entry point for the execute command.
     """
-    ini_file = "pytest-execute-hive.ini" if hive_mode_flag else "pytest-execute.ini"
     pytest_type = "execute-hive" if hive_mode_flag else "execute"
-    default_args = ("-c", ini_file)
-    args = handle_help_flags(list(pytest_args + default_args), pytest_type=pytest_type)
+    args = handle_help_flags(list(pytest_args), pytest_type=pytest_type)
+    ini_file = "pytest-execute-hive.ini" if hive_mode_flag else "pytest-execute.ini"
+    args = ["-c", ini_file] + args
     result = pytest.main(args)
     sys.exit(result)
