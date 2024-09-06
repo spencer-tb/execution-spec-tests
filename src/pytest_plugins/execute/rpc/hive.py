@@ -9,7 +9,7 @@ import time
 from dataclasses import asdict, replace
 from pathlib import Path
 from random import randint
-from typing import Any, Generator, List, Mapping, Tuple, cast
+from typing import Any, Dict, Generator, List, Mapping, Tuple, cast
 
 import pytest
 from ethereum.crypto.hash import keccak256
@@ -748,6 +748,7 @@ class EthRPC(BaseEthRPC):
         last_pending_tx_hashes_count: int | None = None
         start_time = time.time()
         i = 0
+        tx: TransactionByHashResponse | None = None
         while True:
             tx = self.get_transaction_by_hash(tx_hash)
             if tx.block_number is not None:
@@ -772,7 +773,8 @@ class EthRPC(BaseEthRPC):
             i += 1
         raise Exception(
             f"Transaction {tx_hash} ({transaction.model_dump_json()}) not "
-            f"included in a block after {self.transaction_wait_timeout} seconds"
+            f"included in a block after {self.transaction_wait_timeout} seconds: "
+            f"{tx.model_dump_json() if tx is not None else None}"
         )
 
     def wait_for_transactions(
@@ -784,11 +786,13 @@ class EthRPC(BaseEthRPC):
         """
         tx_hashes = [tx.hash for tx in transactions]
         responses: List[TransactionByHashResponse] = []
+        pending_responses: Dict[Hash, TransactionByHashResponse] = {}
         last_pending_tx_hashes_count: int | None = None
         start_time = time.time()
         i = 0
         while True:
             tx_id = 0
+            pending_responses = {}
             while tx_id < len(tx_hashes):
                 tx_hash = tx_hashes[tx_id]
                 tx = self.get_transaction_by_hash(tx_hash)
@@ -796,6 +800,7 @@ class EthRPC(BaseEthRPC):
                     responses.append(tx)
                     tx_hashes.pop(tx_id)
                 else:
+                    pending_responses[tx_hash] = tx
                     tx_id += 1
             if not tx_hashes:
                 return responses
@@ -820,9 +825,13 @@ class EthRPC(BaseEthRPC):
         missing_txs_strings = [
             f"{tx.hash} ({tx.model_dump_json()})" for tx in transactions if tx.hash in tx_hashes
         ]
+        pending_tx_responses_string = "\n".join(
+            [f"{tx_hash}: {tx.model_dump_json()}" for tx_hash, tx in pending_responses.items()]
+        )
         raise Exception(
             f"Transactions {', '.join(missing_txs_strings)} not included in a block "
-            f"after {self.transaction_wait_timeout} seconds"
+            f"after {self.transaction_wait_timeout} seconds:\n"
+            f"{pending_tx_responses_string}"
         )
 
 
