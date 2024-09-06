@@ -47,7 +47,7 @@ def pytest_addoption(parser):
         dest="tx_wait_timeout",
         type=int,
         default=60,
-        help="Maximum time in seconds to wait for a transaction to be mined",
+        help="Maximum time in seconds to wait for a transaction to be included in a block",
     )
 
 
