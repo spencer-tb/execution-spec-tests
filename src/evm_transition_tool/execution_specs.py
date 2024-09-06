@@ -13,17 +13,14 @@ from typing import List, Optional
 
 from requests_unixsocket import Session  # type: ignore
 
-from ethereum_test_forks import Constantinople, ConstantinopleFix, Fork
+from ethereum_test_forks import Constantinople, Fork
 from ethereum_test_types import Alloc, Environment, Transaction
 
 from .geth import GethTransitionTool
 from .transition_tool import FixtureFormats, model_dump_config
 from .types import TransitionToolInput, TransitionToolOutput
 
-UNSUPPORTED_FORKS = (
-    Constantinople,
-    ConstantinopleFix,
-)
+UNSUPPORTED_FORKS = (Constantinople,)
 DAEMON_STARTUP_TIMEOUT_SECONDS = 5
 
 
@@ -153,6 +150,8 @@ class ExecutionSpecsTransitionTool(GethTransitionTool):
                 "--uds",
                 self.server_file_path,
             ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         start = time.time()
         while True:
@@ -212,7 +211,11 @@ class ExecutionSpecsTransitionTool(GethTransitionTool):
         }
 
         post_data = {"state": state_json, "input": input_json}
-        response = Session().post(self.server_url, json=post_data, timeout=10)
+        response = Session().post(
+            self.server_url,
+            json=post_data,
+            timeout=10,
+        )
         response.raise_for_status()  # exception visible in pytest failure output
         output: TransitionToolOutput = TransitionToolOutput.model_validate(response.json())
 
