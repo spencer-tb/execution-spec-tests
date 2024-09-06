@@ -4,10 +4,12 @@ JSON-RPC methods and helper functions for EEST consume based hive simulators.
 
 import time
 from itertools import count
+from pprint import pprint
 from typing import Any, ClassVar, Dict, List, Literal, Union
 
 import requests
 from jwt import encode
+from pydantic import ValidationError
 
 from ethereum_test_base_types import Address, Bytes, Hash, to_json
 from ethereum_test_types import Transaction
@@ -151,9 +153,14 @@ class EthRPC(BaseRPC):
         """
         `eth_getTransactionByHash`: Returns transaction details.
         """
-        return TransactionByHashResponse(
-            **self.post_request("getTransactionByHash", f"{transaction_hash}")
-        )
+        try:
+            resp = TransactionByHashResponse(
+                **self.post_request("getTransactionByHash", f"{transaction_hash}")
+            )
+            return resp
+        except ValidationError as e:
+            pprint(e.errors())
+            raise e
 
     def get_storage_at(
         self, address: Address, position: Hash, block_number: BlockNumberType = "latest"
@@ -202,10 +209,13 @@ class EthRPC(BaseRPC):
         Uses `eth_getTransactionByHash` to wait until a transaction is included in a block.
         """
         tx_hash = transaction.hash
-        for _ in range(self.transaction_wait_timeout):
+        start_time = time.time()
+        while True:
             tx = self.get_transaction_by_hash(tx_hash)
             if tx.block_number is not None:
                 return tx
+            if (time.time() - start_time) > self.transaction_wait_timeout:
+                break
             time.sleep(1)
         raise Exception(
             f"Transaction {tx_hash} ({transaction.model_dump_json()}) not included in a "
@@ -221,7 +231,8 @@ class EthRPC(BaseRPC):
         """
         tx_hashes = [tx.hash for tx in transactions]
         responses: List[TransactionByHashResponse] = []
-        for _ in range(self.transaction_wait_timeout):
+        start_time = time.time()
+        while True:
             i = 0
             while i < len(tx_hashes):
                 tx_hash = tx_hashes[i]
@@ -233,6 +244,8 @@ class EthRPC(BaseRPC):
                     i += 1
             if not tx_hashes:
                 return responses
+            if (time.time() - start_time) > self.transaction_wait_timeout:
+                break
             time.sleep(1)
         missing_txs_strings = [
             f"{tx.hash} ({tx.model_dump_json()})" for tx in transactions if tx.hash in tx_hashes
