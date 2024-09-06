@@ -150,6 +150,14 @@ def pytest_addoption(parser):
             "(`-n` option)."
         ),
     )
+    hive_rpc_group.addoption(
+        "--tx-wait-timeout",
+        action="store",
+        dest="tx_wait_timeout",
+        type=int,
+        default=10,  # Lowered from Remote RPC because of the consistent block production
+        help="Maximum time in seconds to wait for a transaction to be included in a block",
+    )
 
 
 def pytest_configure(config):  # noqa: D103
@@ -610,11 +618,16 @@ class EthRPC(BaseEthRPC):
         transactions_per_block: int,
         session_temp_folder: Path,
         get_payload_wait_time: float,
+        initial_forkchoice_update_retries: int = 5,
+        transaction_wait_timeout: int = 60,
     ):
         """
         Initialize the Ethereum RPC client for the hive simulator.
         """
-        super().__init__(f"http://{client.ip}:8545")
+        super().__init__(
+            f"http://{client.ip}:8545",
+            transaction_wait_timeout=transaction_wait_timeout,
+        )
         self.fork = fork
         self.engine_rpc = EngineRPC(f"http://{client.ip}:8551")
         self.transactions_per_block = transactions_per_block
@@ -624,10 +637,14 @@ class EthRPC(BaseEthRPC):
         # Send initial forkchoice updated only if we are the first worker
         base_name = "eth_rpc_forkchoice_updated"
         base_file = session_temp_folder / base_name
+        base_error_file = session_temp_folder / f"{base_name}.err"
         base_lock_file = session_temp_folder / f"{base_name}.lock"
 
         with FileLock(base_lock_file):
+            if base_error_file.exists():
+                raise Exception("Error occurred during initial forkchoice_updated")
             if not base_file.exists():
+                base_error_file.touch()  # Assume error
                 # Send initial forkchoice updated
                 forkchoice_state = ForkchoiceState(
                     head_block_hash=base_genesis_header.block_hash,
@@ -636,16 +653,19 @@ class EthRPC(BaseEthRPC):
                 assert (
                     forkchoice_version is not None
                 ), "Fork does not support engine forkchoice_updated"
-                response = self.engine_rpc.forkchoice_updated(
-                    forkchoice_state,
-                    None,
-                    version=forkchoice_version,
-                )
-                assert (
-                    response.payload_status.status == PayloadStatusEnum.VALID
-                ), "Initial forkchoice_updated was invalid"
-                with open(base_file, "w") as f:
-                    f.write("")
+                for _ in range(initial_forkchoice_update_retries):
+                    response = self.engine_rpc.forkchoice_updated(
+                        forkchoice_state,
+                        None,
+                        version=forkchoice_version,
+                    )
+                    if response.payload_status.status == PayloadStatusEnum.VALID:
+                        break
+                    time.sleep(0.5)
+                else:
+                    raise Exception("Initial forkchoice_updated was invalid")
+                base_error_file.unlink()  # Success
+                base_file.touch()
 
     def generate_block(self: "EthRPC"):
         """
@@ -720,15 +740,15 @@ class EthRPC(BaseEthRPC):
                 self.generate_block()
         return returned_hash
 
-    def wait_for_transaction(
-        self, transaction: Transaction, timeout: int = 600
-    ) -> TransactionByHashResponse:
+    def wait_for_transaction(self, transaction: Transaction) -> TransactionByHashResponse:
         """
         Uses `eth_getTransactionByHash` to wait until a transaction is included in a block.
         """
         tx_hash = transaction.hash
         last_pending_tx_hashes_count: int | None = None
-        for i in range(timeout):
+        start_time = time.time()
+        i = 0
+        while True:
             tx = self.get_transaction_by_hash(tx_hash)
             if tx.block_number is not None:
                 return tx
@@ -746,14 +766,17 @@ class EthRPC(BaseEthRPC):
                         self.generate_block()
 
                     last_pending_tx_hashes_count = len(self.pending_tx_hashes)
+            if (time.time() - start_time) > self.transaction_wait_timeout:
+                break
             time.sleep(0.1)
+            i += 1
         raise Exception(
             f"Transaction {tx_hash} ({transaction.model_dump_json()}) not "
-            f"included in a block after {timeout} seconds"
+            f"included in a block after {self.transaction_wait_timeout} seconds"
         )
 
     def wait_for_transactions(
-        self, transactions: List[Transaction], timeout: int = 600
+        self, transactions: List[Transaction]
     ) -> List[TransactionByHashResponse]:
         """
         Uses `eth_getTransactionByHash` to wait for all transactions in list are included in a
@@ -762,7 +785,9 @@ class EthRPC(BaseEthRPC):
         tx_hashes = [tx.hash for tx in transactions]
         responses: List[TransactionByHashResponse] = []
         last_pending_tx_hashes_count: int | None = None
-        for i in range(timeout):
+        start_time = time.time()
+        i = 0
+        while True:
             tx_id = 0
             while tx_id < len(tx_hashes):
                 tx_hash = tx_hashes[tx_id]
@@ -788,7 +813,10 @@ class EthRPC(BaseEthRPC):
                         self.generate_block()
 
                     last_pending_tx_hashes_count = len(self.pending_tx_hashes)
+            if (time.time() - start_time) > self.transaction_wait_timeout:
+                break
             time.sleep(0.1)
+            i += 1
         missing_txs_strings = [
             f"{tx.hash} ({tx.model_dump_json()})" for tx in transactions if tx.hash in tx_hashes
         ]
@@ -831,6 +859,7 @@ def eth_rpc(
     Initialize ethereum RPC client for the execution client under test.
     """
     get_payload_wait_time = request.config.getoption("get_payload_wait_time")
+    tx_wait_timeout = request.config.getoption("tx_wait_timeout")
     return EthRPC(
         client=client,
         fork=base_fork,
@@ -838,4 +867,5 @@ def eth_rpc(
         transactions_per_block=transactions_per_block,
         session_temp_folder=session_temp_folder,
         get_payload_wait_time=get_payload_wait_time,
+        transaction_wait_timeout=tx_wait_timeout,
     )
