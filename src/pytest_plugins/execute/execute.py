@@ -51,6 +51,35 @@ def pytest_addoption(parser):
     """
     Adds command-line options to pytest.
     """
+    execute_group = parser.getgroup("execute", "Arguments defining test execution behavior")
+    execute_group.addoption(
+        "--default-gas-price",
+        action="store",
+        dest="default_gas_price",
+        type=int,
+        default=10**9,
+        help=("Default gas price used for transactions, unless overridden by the test."),
+    )
+    execute_group.addoption(
+        "--default-max-fee-per-gas",
+        action="store",
+        dest="default_max_fee_per_gas",
+        type=int,
+        default=10**9,
+        help=("Default max fee per gas used for transactions, unless overridden by the test."),
+    )
+    execute_group.addoption(
+        "--default-max-priority-fee-per-gas",
+        action="store",
+        dest="default_max_priority_fee_per_gas",
+        type=int,
+        default=10**9,
+        help=(
+            "Default max priority fee per gas used for transactions, "
+            "unless overridden by the test."
+        ),
+    )
+
     evm_group = parser.getgroup("evm", "Arguments defining evm executable behavior")
     evm_group.addoption(
         "--evm-bin",
@@ -333,13 +362,40 @@ def t8n(request, evm_bin: Path) -> Generator[TransitionTool, None, None]:
     t8n.shutdown()
 
 
+@pytest.fixture(scope="session")
+def default_gas_price(request) -> int:
+    """
+    Returns the default gas price used for transactions.
+    """
+    return request.config.getoption("default_gas_price")
+
+
+@pytest.fixture(scope="session")
+def default_max_fee_per_gas(request) -> int:
+    """
+    Returns the default max fee per gas used for transactions.
+    """
+    return request.config.getoption("default_max_fee_per_gas")
+
+
+@pytest.fixture(scope="session")
+def default_max_priority_fee_per_gas(request) -> int:
+    """
+    Returns the default max priority fee per gas used for transactions.
+    """
+    return request.config.getoption("default_max_priority_fee_per_gas")
+
+
 @pytest.fixture(autouse=True, scope="session")
-def modify_transaction_defaults(request):
+def modify_transaction_defaults(
+    default_gas_price: int, default_max_fee_per_gas: int, default_max_priority_fee_per_gas: int
+):
     """
     Modify transaction defaults to values better suited for live networks.
     """
-    TransactionDefaults.max_fee_per_gas = 8
-    TransactionDefaults.max_priority_fee_per_gas = 8
+    TransactionDefaults.gas_price = default_gas_price
+    TransactionDefaults.max_fee_per_gas = default_max_fee_per_gas
+    TransactionDefaults.max_priority_fee_per_gas = default_max_priority_fee_per_gas
 
 
 @pytest.fixture(scope="session")
@@ -520,6 +576,7 @@ def base_test_parametrizer(cls: Type[BaseTest]):
         eth_rpc: EthRPC,
         dump_dir_parameter_level,
         collector: Collector,
+        default_gas_price: int,
     ):
         """
         Fixture used to instantiate an auto-fillable BaseTest object from within
@@ -571,8 +628,7 @@ def base_test_parametrizer(cls: Type[BaseTest]):
                     remaining_balance = eth_rpc.get_balance(eoa)
                     eoa.nonce = eth_rpc.get_transaction_count(eoa)
                     refund_gas_limit = 21_000
-                    refund_gas_price = 10**9
-                    tx_cost = refund_gas_limit * refund_gas_price
+                    tx_cost = refund_gas_limit * default_gas_price
                     if remaining_balance < tx_cost:
                         continue
                     refund_txs.append(
@@ -580,7 +636,7 @@ def base_test_parametrizer(cls: Type[BaseTest]):
                             sender=eoa,
                             to=pre._sender,
                             gas_limit=21_000,
-                            gas_price=10**9,
+                            gas_price=default_gas_price,
                             value=remaining_balance - tx_cost,
                         ).with_signature_and_sender()
                     )
