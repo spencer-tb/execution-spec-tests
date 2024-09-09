@@ -1,15 +1,11 @@
 """
-Top-level pytest configuration file providing:
-- Command-line options,
-- Test-fixtures that can be used by all test cases,
-and that modifies pytest hooks in order to fill test specs for all tests and
-writes the generated fixtures to file.
+Test execution plugin for pytest, to run Ethereum tests using in live networks.
 """
 
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Type
+from typing import Any, Dict, Generator, List, Type
 
 import pytest
 from pytest_metadata.plugin import metadata_key  # type: ignore
@@ -98,39 +94,8 @@ def pytest_addoption(parser):
         default=None,
         help="Collect traces of the execution information from the transition tool.",
     )
-    evm_group.addoption(
-        "--verify-fixtures",
-        action="store_true",
-        dest="verify_fixtures",
-        default=False,
-        help=(
-            "Verify generated fixture JSON files using geth's evm blocktest command. "
-            "By default, the same evm binary as for the t8n tool is used. A different (geth) evm "
-            "binary may be specified via --verify-fixtures-bin, this must be specified if filling "
-            "with a non-geth t8n tool that does not support blocktest."
-        ),
-    )
-    evm_group.addoption(
-        "--verify-fixtures-bin",
-        action="store",
-        dest="verify_fixtures_bin",
-        type=Path,
-        default=None,
-        help=(
-            "Path to an evm executable that provides the `blocktest` command. "
-            "Default: The first (geth) 'evm' entry in PATH."
-        ),
-    )
 
     test_group = parser.getgroup("tests", "Arguments defining filler location and output")
-    test_group.addoption(
-        "--filler-path",
-        action="store",
-        dest="filler_path",
-        default="./tests/",
-        type=Path,
-        help="Path to filler directives",
-    )
     test_group.addoption(
         "--output",
         action="store",
@@ -170,16 +135,6 @@ def pytest_addoption(parser):
         default=None,
         type=str,
         help="Specify a build name for the fixtures.ini file, e.g., 'stable'.",
-    )
-
-    debug_group = parser.getgroup("debug", "Arguments defining debug behavior")
-    debug_group.addoption(
-        "--evm-dump-dir",
-        "--t8n-dump-dir",
-        action="store",
-        dest="base_dump_dir",
-        default="",
-        help="Path to dump the transition tool debug output.",
     )
 
 
@@ -334,15 +289,6 @@ def evm_bin(request) -> Path:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def verify_fixtures_bin(request) -> Path:
-    """
-    Returns the configured evm tool binary path used to run statetest or
-    blocktest.
-    """
-    return request.config.getoption("verify_fixtures_bin")
-
-
-@pytest.fixture(autouse=True, scope="session")
 def solc_bin(request):
     """
     Returns the configured solc binary path.
@@ -398,41 +344,6 @@ def modify_transaction_defaults(
     TransactionDefaults.max_priority_fee_per_gas = default_max_priority_fee_per_gas
 
 
-@pytest.fixture(scope="session")
-def base_dump_dir(request) -> Optional[Path]:
-    """
-    The base directory to dump the evm debug output.
-    """
-    base_dump_dir_str = request.config.getoption("base_dump_dir")
-    if base_dump_dir_str:
-        return Path(base_dump_dir_str)
-    return None
-
-
-@pytest.fixture(scope="function")
-def dump_dir_parameter_level(
-    request, base_dump_dir: Optional[Path], filler_path: Path
-) -> Optional[Path]:
-    """
-    The directory to dump evm transition tool debug output on a test parameter
-    level.
-
-    Example with --evm-dump-dir=/tmp/evm:
-    -> /tmp/evm/shanghai__eip3855_push0__test_push0__test_push0_key_sstore/fork_shanghai/
-    """
-    evm_dump_dir = node_to_test_info(request.node).get_dump_dir_path(
-        base_dump_dir,
-        filler_path,
-        level="test_parameter",
-    )
-    # NOTE: Use str for compatibility with pytest-dist
-    if evm_dump_dir:
-        request.node.config.evm_dump_dir = str(evm_dump_dir)
-    else:
-        request.node.config.evm_dump_dir = None
-    return evm_dump_dir
-
-
 @dataclass(kw_only=True)
 class Collector:
     """
@@ -460,14 +371,6 @@ def collector(
     """
     collector = Collector(eth_rpc=eth_rpc)
     yield collector
-
-
-@pytest.fixture(autouse=True, scope="session")
-def filler_path(request) -> Path:
-    """
-    Returns the directory containing the tests to execute.
-    """
-    return request.config.getoption("filler_path")
 
 
 @pytest.fixture(autouse=True)
@@ -574,7 +477,6 @@ def base_test_parametrizer(cls: Type[BaseTest]):
         pre: Alloc,
         eips: List[int],
         eth_rpc: EthRPC,
-        dump_dir_parameter_level,
         collector: Collector,
         default_gas_price: int,
     ):
@@ -593,7 +495,7 @@ def base_test_parametrizer(cls: Type[BaseTest]):
 
         class BaseTestWrapper(cls):  # type: ignore
             def __init__(self, *args, **kwargs):
-                kwargs["t8n_dump_dir"] = dump_dir_parameter_level
+                kwargs["t8n_dump_dir"] = None
                 if "pre" not in kwargs:
                     kwargs["pre"] = pre
                 elif kwargs["pre"] != pre:
