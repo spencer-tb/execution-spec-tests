@@ -21,26 +21,17 @@ from ethereum_test_rpc import EthRPC
 from ethereum_test_tools import SPEC_TYPES, BaseTest, TestInfo, Transaction, Yul
 from ethereum_test_tools.code import Solc
 from ethereum_test_types import TransactionDefaults
-from evm_transition_tool import TransitionTool
 from pytest_plugins.spec_version_checker.spec_version_checker import EIPSpecTestItem
 
 from .pre_alloc import Alloc
 
 
-def default_output_directory() -> str:
-    """
-    The default directory to store the generated test fixtures. Defined as a
-    function to allow for easier testing.
-    """
-    return "./execution_results"
-
-
-def default_html_report_filename() -> str:
+def default_html_report_file_path() -> str:
     """
     The default file to store the generated HTML test report. Defined as a
     function to allow for easier testing.
     """
-    return "report_execute.html"
+    return "./execution_results/report_execute.html"
 
 
 def pytest_addoption(parser):
@@ -76,65 +67,16 @@ def pytest_addoption(parser):
         ),
     )
 
-    evm_group = parser.getgroup("evm", "Arguments defining evm executable behavior")
-    evm_group.addoption(
-        "--evm-bin",
-        action="store",
-        dest="evm_bin",
-        type=Path,
-        default=None,
-        help=(
-            "Path to an evm executable that provides `t8n`. Default: First 'evm' entry in PATH."
-        ),
-    )
-    evm_group.addoption(
-        "--traces",
-        action="store_true",
-        dest="evm_collect_traces",
-        default=None,
-        help="Collect traces of the execution information from the transition tool.",
-    )
-
-    test_group = parser.getgroup("tests", "Arguments defining filler location and output")
-    test_group.addoption(
-        "--output",
-        action="store",
-        dest="output",
-        type=Path,
-        default=Path(default_output_directory()),
-        help=(
-            "Directory path to write the execution result. "
-            f"Default: '{default_output_directory()}'."
-        ),
-    )
-    test_group.addoption(
-        "--report-filename",
-        action="store",
-        dest="report_filename",
-        type=str,
-        default=default_html_report_filename(),
-        help=(
-            "File name of the html report generated. "
-            f"Default: '{default_html_report_filename()}'."
-        ),
-    )
-    test_group.addoption(
+    report_group = parser.getgroup("tests", "Arguments defining html report behavior")
+    report_group.addoption(
         "--no-html",
         action="store_true",
         dest="disable_html",
         default=False,
         help=(
-            "Don't generate an HTML test report (in the output directory). "
+            "Don't generate an HTML test report. "
             "The --html flag can be used to specify a different path."
         ),
-    )
-    test_group.addoption(
-        "--build-name",
-        action="store",
-        dest="build_name",
-        default=None,
-        type=str,
-        help="Specify a build name for the fixtures.ini file, e.g., 'stable'.",
     )
 
 
@@ -173,23 +115,9 @@ def pytest_configure(config):
     )
     if config.option.collectonly:
         return
-    if not config.getoption("disable_html") and config.getoption("htmlpath") is None:
+    if config.getoption("disable_html") and config.getoption("htmlpath") is None:
         # generate an html report by default, unless explicitly disabled
-        config.option.htmlpath = config.getoption("output") / config.getoption("report_filename")
-    # Instantiate the transition tool here to check that the binary path/trace option is valid.
-    # This ensures we only raise an error once, if appropriate, instead of for every test.
-    t8n = TransitionTool.from_binary_path(
-        binary_path=config.getoption("evm_bin"), trace=config.getoption("evm_collect_traces")
-    )
-    if (
-        isinstance(config.getoption("numprocesses"), int)
-        and config.getoption("numprocesses") > 0
-        and "Besu" in str(t8n.detect_binary_pattern)
-    ):
-        pytest.exit(
-            "The Besu t8n tool does not work well with the xdist plugin; use -n=0.",
-            returncode=pytest.ExitCode.USAGE_ERROR,
-        )
+        config.option.htmlpath = Path(default_html_report_file_path())
     config.solc_version = Solc(config.getoption("solc_bin")).version
     if config.solc_version < Frontier.solc_min_version():
         pytest.exit(
@@ -199,7 +127,6 @@ def pytest_configure(config):
         )
 
     config.stash[metadata_key]["Tools"] = {
-        "t8n": t8n.version(),
         "solc": str(config.solc_version),
     }
     command_line_args = "fill " + " ".join(config.invocation_params.args)
@@ -211,9 +138,8 @@ def pytest_report_header(config, start_path):
     """Add lines to pytest's console output header"""
     if config.option.collectonly:
         return
-    t8n_version = config.stash[metadata_key]["Tools"]["t8n"]
     solc_version = config.stash[metadata_key]["Tools"]["solc"]
-    return [(f"{t8n_version}, {solc_version}")]
+    return [(f"{solc_version}")]
 
 
 def pytest_metadata(metadata):
@@ -281,31 +207,11 @@ def pytest_html_report_title(report):
 
 
 @pytest.fixture(autouse=True, scope="session")
-def evm_bin(request) -> Path:
-    """
-    Returns the configured evm tool binary path used to run t8n.
-    """
-    return request.config.getoption("evm_bin")
-
-
-@pytest.fixture(autouse=True, scope="session")
 def solc_bin(request):
     """
     Returns the configured solc binary path.
     """
     return request.config.getoption("solc_bin")
-
-
-@pytest.fixture(autouse=True, scope="session")
-def t8n(request, evm_bin: Path) -> Generator[TransitionTool, None, None]:
-    """
-    Returns the configured transition tool.
-    """
-    t8n = TransitionTool.from_binary_path(
-        binary_path=evm_bin, trace=request.config.getoption("evm_collect_traces")
-    )
-    yield t8n
-    t8n.shutdown()
 
 
 @pytest.fixture(scope="session")
