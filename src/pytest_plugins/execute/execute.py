@@ -113,6 +113,11 @@ def pytest_configure(config):
         "markers",
         "skip_execute: Skip the execute mode for this test.",
     )
+    config.addinivalue_line(
+        "markers",
+        "xfail_execute: Mark this test to expect failure, but still send transactions in execute "
+        "mode.",
+    )
     if config.option.collectonly:
         return
     if config.getoption("disable_html") and config.getoption("htmlpath") is None:
@@ -496,10 +501,11 @@ def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item
             continue
         for marker in item.iter_markers():
             if marker.name == "skip_execute":
-                item.add_marker(
-                    pytest.mark.skip(reason="execute mode not supported for this test.")
-                )
-                break
+                reason = marker.kwargs["reason"]
+                item.add_marker(pytest.mark.skip(reason=reason))
+            elif marker.name == "xfail_execute":
+                reason = marker.kwargs["reason"]
+                item.add_marker(pytest.mark.xfail(reason=reason))
         if "yul" in item.fixturenames:  # type: ignore
             item.add_marker(pytest.mark.yul_test)
 

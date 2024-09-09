@@ -222,6 +222,11 @@ def pytest_configure(config):
         "markers",
         "skip_execute: Skip the execute mode for this test.",
     )
+    config.addinivalue_line(
+        "markers",
+        "xfail_execute: Mark this test to expect failure, but still send transactions in execute "
+        "mode.",
+    )
     if config.option.collectonly:
         return
     if not config.getoption("disable_html") and config.getoption("htmlpath") is None:
