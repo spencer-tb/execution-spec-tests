@@ -154,7 +154,7 @@ def sender_key(
     refund_gas_price = sender_funding_transactions_gas_price
     tx_cost = refund_gas_limit * refund_gas_price
 
-    if remaining_balance < tx_cost:
+    if (remaining_balance - 1) < tx_cost:
         return
 
     refund_tx = Transaction(
