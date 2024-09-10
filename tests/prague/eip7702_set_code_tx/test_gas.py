@@ -578,7 +578,7 @@ def gas_test_parameter_args(
             dict(
                 authority_type=AddressType.CONTRACT,
             ),
-            marks=pytest.mark.pre_alloc_modify,
+            marks=pytest.mark.skip_execute(reason="Pre-alloc modification"),
             id="single_valid_authorization_invalid_contract_authority",
         ),
         pytest.param(
@@ -587,7 +587,7 @@ def gas_test_parameter_args(
                 authority_type=[AddressType.EMPTY_ACCOUNT, AddressType.CONTRACT],
                 authorizations_count=MULTIPLE_AUTHORIZATIONS_COUNT,
             ),
-            marks=pytest.mark.pre_alloc_modify,
+            marks=pytest.mark.skip_execute(reason="Pre-alloc modification"),
             id="multiple_authorizations_empty_account_then_contract_authority",
         ),
         pytest.param(
@@ -596,7 +596,7 @@ def gas_test_parameter_args(
                 authority_type=[AddressType.EOA, AddressType.CONTRACT],
                 authorizations_count=MULTIPLE_AUTHORIZATIONS_COUNT,
             ),
-            marks=pytest.mark.pre_alloc_modify,
+            marks=pytest.mark.skip_execute(reason="Pre-alloc modification"),
             id="multiple_authorizations_eoa_then_contract_authority",
         ),
         pytest.param(
@@ -606,7 +606,7 @@ def gas_test_parameter_args(
                 authority_type=[AddressType.EOA, AddressType.CONTRACT],
                 authorizations_count=MULTIPLE_AUTHORIZATIONS_COUNT,
             ),
-            marks=pytest.mark.pre_alloc_modify,
+            marks=pytest.mark.skip_execute(reason="Pre-alloc modification"),
             id="multiple_authorizations_eoa_self_sponsored_then_contract_authority",
         ),
     ]
@@ -678,6 +678,7 @@ def gas_test_parameter_args(
 
 
 @pytest.mark.parametrize(**gas_test_parameter_args(include_pre_authorized=False))
+@pytest.mark.skip_execute(reason="Test requires specific block base fee")
 def test_gas_cost(
     state_test: StateTestFiller,
     pre: Alloc,
