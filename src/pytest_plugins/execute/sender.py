@@ -23,6 +23,16 @@ def pytest_addoption(parser):
     )
 
     sender_group.addoption(
+        "seed-account-sweep-amount",
+        action="store",
+        dest="seed_account_sweep_amount",
+        type=int,
+        default=None,
+        help="Amount of wei to sweep from the seed account to the sender account. "
+        "Default=None (Entire balance)",
+    )
+
+    sender_group.addoption(
         "--sender-funding-txs-gas-price",
         action="store",
         dest="sender_funding_transactions_gas_price",
@@ -52,9 +62,17 @@ def sender_funding_transactions_gas_price(request: pytest.FixtureRequest) -> int
 @pytest.fixture(scope="session")
 def sender_fund_refund_gas_limit(request: pytest.FixtureRequest) -> int:
     """
-    Get the gas price for the funding transactions.
+    Get the gas limit of the funding transactions.
     """
     return request.config.option.sender_fund_refund_gas_limit
+
+
+@pytest.fixture(scope="session")
+def seed_account_sweep_amount(request: pytest.FixtureRequest) -> int | None:
+    """
+    Get the seed account sweep amount.
+    """
+    return request.config.option.seed_account_sweep_amount
 
 
 @pytest.fixture(scope="session")
@@ -64,6 +82,8 @@ def sender_key_initial_balance(
     session_temp_folder: Path,
     worker_count: int,
     sender_funding_transactions_gas_price: int,
+    sender_fund_refund_gas_limit: int,
+    seed_account_sweep_amount: int | None,
 ) -> int:
     """
     Calculate the initial balance of each sender key.
@@ -87,11 +107,13 @@ def sender_key_initial_balance(
             with base_file.open("r") as f:
                 sender_key_initial_balance = int(f.read())
         else:
-            seed_sender_balance_per_worker = eth_rpc.get_balance(seed_sender) // worker_count
+            if seed_account_sweep_amount is None:
+                seed_account_sweep_amount = eth_rpc.get_balance(seed_sender)
+            seed_sender_balance_per_worker = seed_account_sweep_amount // worker_count
             assert seed_sender_balance_per_worker > 100, "Seed sender balance too low"
             # Subtract the cost of the transaction that is going to be sent to the seed sender
             sender_key_initial_balance = seed_sender_balance_per_worker - (
-                21_000 * sender_funding_transactions_gas_price
+                sender_fund_refund_gas_limit * sender_funding_transactions_gas_price
             )
 
             with base_file.open("w") as f:
