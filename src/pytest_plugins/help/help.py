@@ -78,13 +78,19 @@ def pytest_configure(config):
                 "execute",
                 "remote RPC configuration",
                 "pre-allocation behavior during test execution",
+                "sender key fixtures",
             ],
         )
     elif config.getoption("show_execute_hive_help"):
         show_specific_help(
             config,
             "pytest-execute-hive.ini",
-            ["execute", "hive RPC client", "pre-allocation behavior during test execution"],
+            [
+                "execute",
+                "hive RPC client",
+                "pre-allocation behavior during test execution",
+                "sender key fixtures",
+            ],
         )
 
 
