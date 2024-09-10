@@ -72,7 +72,7 @@ def pytest_report_header(config):
     reset = "\033[39;49m"
     eoa_start = config.getoption("eoa_iterator_start")
     header = [
-        (bold + f"Start seed for EOA: {eoa_start} " + reset),
+        (bold + f"Start seed for EOA: {hex(eoa_start)} " + reset),
     ]
     return header
 
@@ -83,7 +83,7 @@ def eoa_iterator(request) -> Iterator[EOA]:
     Returns an iterator that generates EOAs.
     """
     eoa_start = request.config.getoption("eoa_iterator_start")
-    print(f"Starting EOA index: {eoa_start}")
+    print(f"Starting EOA index: {hex(eoa_start)}")
     return iter(EOA(key=i, nonce=0) for i in count(start=eoa_start))
 
 
