@@ -31,6 +31,15 @@ def pytest_addoption(parser):
         help=("Gas price set for the funding transactions of each worker's sender key."),
     )
 
+    sender_group.addoption(
+        "--sender-fund-refund-gas-limit",
+        action="store",
+        dest="sender_fund_refund_gas_limit",
+        type=int,
+        default=21_000,
+        help=("Gas limit set for the funding transactions of each worker's sender key."),
+    )
+
 
 @pytest.fixture(scope="session")
 def sender_funding_transactions_gas_price(request: pytest.FixtureRequest) -> int:
@@ -38,6 +47,14 @@ def sender_funding_transactions_gas_price(request: pytest.FixtureRequest) -> int
     Get the gas price for the funding transactions.
     """
     return request.config.option.sender_funding_transactions_gas_price
+
+
+@pytest.fixture(scope="session")
+def sender_fund_refund_gas_limit(request: pytest.FixtureRequest) -> int:
+    """
+    Get the gas price for the funding transactions.
+    """
+    return request.config.option.sender_fund_refund_gas_limit
 
 
 @pytest.fixture(scope="session")
@@ -91,6 +108,7 @@ def sender_key(
     eth_rpc: EthRPC,
     session_temp_folder: Path,
     sender_funding_transactions_gas_price: int,
+    sender_fund_refund_gas_limit: int,
 ) -> Generator[EOA, None, None]:
     """
     Get the sender keys for all tests.
@@ -115,7 +133,7 @@ def sender_key(
         fund_tx = Transaction(
             sender=seed_sender,
             to=sender,
-            gas_limit=21_000,
+            gas_limit=sender_fund_refund_gas_limit,
             gas_price=sender_funding_transactions_gas_price,
             value=sender_key_initial_balance,
         ).with_signature_and_sender()
@@ -132,7 +150,7 @@ def sender_key(
         str(sender)
     ] = f"Used balance={(sender_key_initial_balance - remaining_balance) / 10**18:.18f} Ξ"
 
-    refund_gas_limit = 21_000
+    refund_gas_limit = sender_fund_refund_gas_limit
     refund_gas_price = sender_funding_transactions_gas_price
     tx_cost = refund_gas_limit * refund_gas_price
 
@@ -142,9 +160,9 @@ def sender_key(
     refund_tx = Transaction(
         sender=sender,
         to=seed_sender,
-        gas_limit=21_000,
-        gas_price=sender_funding_transactions_gas_price,
-        value=remaining_balance - tx_cost,
+        gas_limit=refund_gas_limit,
+        gas_price=refund_gas_price,
+        value=remaining_balance - tx_cost - 1,
     ).with_signature_and_sender()
 
     eth_rpc.send_wait_transaction(refund_tx)
