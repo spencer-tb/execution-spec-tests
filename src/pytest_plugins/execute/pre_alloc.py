@@ -55,6 +55,14 @@ def pytest_addoption(parser):
         choices=list(EVMCodeType),
         help="Type of EVM code to deploy in each test by default.",
     )
+    pre_alloc_group.addoption(
+        "--eoa-fund-amount-default",
+        action="store",
+        dest="eoa_fund_amount_default",
+        default=10**18,
+        type=int,
+        help="The default amount of wei to fund each EOA in each test with.",
+    )
 
 
 @pytest.hookimpl(trylast=True)
@@ -99,6 +107,7 @@ class Alloc(BaseAlloc):
         eth_rpc: EthRPC,
         eoa_iterator: Iterator[EOA],
         chain_id: int,
+        eoa_fund_amount_default: int,
         evm_code_type: EVMCodeType | None = None,
         **kwargs,
     ):
@@ -108,6 +117,7 @@ class Alloc(BaseAlloc):
         self._eoa_iterator = eoa_iterator
         self._evm_code_type = evm_code_type
         self._chain_id = chain_id
+        self._eoa_fund_amount_default = eoa_fund_amount_default
 
     def __setitem__(self, address: Address | FixedSizeBytesConvertible, account: Account | None):
         """
@@ -222,7 +232,7 @@ class Alloc(BaseAlloc):
         eoa = next(self._eoa_iterator)
         # Send a transaction to fund the EOA
         if amount is None:
-            amount = self.eoa_fund_amount_default
+            amount = self._eoa_fund_amount_default
 
         if delegation is not None:
             if not isinstance(delegation, Address) and delegation == "Self":
@@ -302,6 +312,14 @@ def evm_code_type(request: pytest.FixtureRequest) -> EVMCodeType:
     return EVMCodeType.LEGACY
 
 
+@pytest.fixture(scope="session")
+def eoa_fund_amount_default(request: pytest.FixtureRequest) -> int:
+    """
+    Get the gas price for the funding transactions.
+    """
+    return request.config.option.eoa_fund_amount_default
+
+
 @pytest.fixture(autouse=True, scope="function")
 def pre(
     sender_key: EOA,
@@ -309,6 +327,7 @@ def pre(
     eth_rpc: EthRPC,
     evm_code_type: EVMCodeType,
     chain_id: int,
+    eoa_fund_amount_default: int,
 ) -> Alloc:
     """
     Returns the default pre allocation for all tests (Empty alloc).
@@ -319,4 +338,5 @@ def pre(
         eoa_iterator=eoa_iterator,
         evm_code_type=evm_code_type,
         chain_id=chain_id,
+        eoa_fund_amount_default=eoa_fund_amount_default,
     )

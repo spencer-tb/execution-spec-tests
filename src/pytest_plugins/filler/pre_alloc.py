@@ -208,7 +208,7 @@ class Alloc(BaseAlloc):
         """
         eoa = next(self._eoa_iterator)
         if amount is None:
-            amount = self.eoa_fund_amount_default
+            amount = self._eoa_fund_amount_default
         if Number(amount) > 0 or storage is not None or delegation is not None:
             if storage is None and delegation is None:
                 account = Account(
