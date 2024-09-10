@@ -23,7 +23,7 @@ def pytest_addoption(parser):
     )
 
     sender_group.addoption(
-        "seed-account-sweep-amount",
+        "--seed-account-sweep-amount",
         action="store",
         dest="seed_account_sweep_amount",
         type=int,

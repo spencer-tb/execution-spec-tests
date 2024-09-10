@@ -44,7 +44,7 @@ def pytest_addoption(parser):
         action="store",
         dest="default_gas_price",
         type=int,
-        default=10**6,
+        default=10**9,
         help=("Default gas price used for transactions, unless overridden by the test."),
     )
     execute_group.addoption(
@@ -52,7 +52,7 @@ def pytest_addoption(parser):
         action="store",
         dest="default_max_fee_per_gas",
         type=int,
-        default=10**6,
+        default=10**9,
         help=("Default max fee per gas used for transactions, unless overridden by the test."),
     )
     execute_group.addoption(
@@ -60,7 +60,7 @@ def pytest_addoption(parser):
         action="store",
         dest="default_max_priority_fee_per_gas",
         type=int,
-        default=10**6,
+        default=10**9,
         help=(
             "Default max priority fee per gas used for transactions, "
             "unless overridden by the test."
