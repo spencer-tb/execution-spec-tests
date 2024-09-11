@@ -13,13 +13,11 @@ from pytest_metadata.plugin import metadata_key  # type: ignore
 from ethereum_test_execution import BaseExecute, ExecuteFormats
 from ethereum_test_forks import (
     Fork,
-    Frontier,
     get_closest_fork_with_solc_support,
     get_forks_with_solc_support,
 )
 from ethereum_test_rpc import EthRPC
 from ethereum_test_tools import SPEC_TYPES, BaseTest, TestInfo, Transaction, Yul
-from ethereum_test_tools.code import Solc
 from ethereum_test_types import TransactionDefaults
 from pytest_plugins.spec_version_checker.spec_version_checker import EIPSpecTestItem
 
@@ -123,17 +121,6 @@ def pytest_configure(config):
     if config.getoption("disable_html") and config.getoption("htmlpath") is None:
         # generate an html report by default, unless explicitly disabled
         config.option.htmlpath = Path(default_html_report_file_path())
-    config.solc_version = Solc(config.getoption("solc_bin")).version
-    if config.solc_version < Frontier.solc_min_version():
-        pytest.exit(
-            f"Unsupported solc version: {config.solc_version}. Minimum required version is "
-            f"{Frontier.solc_min_version()}",
-            returncode=pytest.ExitCode.USAGE_ERROR,
-        )
-
-    config.stash[metadata_key]["Tools"] = {
-        "solc": str(config.solc_version),
-    }
     command_line_args = "fill " + " ".join(config.invocation_params.args)
     config.stash[metadata_key]["Command-line args"] = f"<code>{command_line_args}</code>"
 
