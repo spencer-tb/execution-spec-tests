@@ -248,13 +248,13 @@ def base_pre_genesis(
         base_fee_per_gas=env.base_fee_per_gas,
         blob_gas_used=env.blob_gas_used,
         excess_blob_gas=env.excess_blob_gas,
-        withdrawals_root=Withdrawal.list_root(env.withdrawals)
-        if env.withdrawals is not None
-        else None,
+        withdrawals_root=(
+            Withdrawal.list_root(env.withdrawals) if env.withdrawals is not None else None
+        ),
         parent_beacon_block_root=env.parent_beacon_block_root,
-        requests_root=Requests(root=[]).trie_root
-        if base_fork.header_requests_required(0, 0)
-        else None,
+        requests_root=(
+            Requests(root=[]).trie_root if base_fork.header_requests_required(0, 0) else None
+        ),
     )
 
     return (pre_alloc, genesis)
@@ -325,7 +325,7 @@ def test_suite_name() -> str:
     """
     The name of the hive test suite used in this simulator.
     """
-    return "EEST Execute Test, Hive Mode"
+    return "eest-execute"
 
 
 @pytest.fixture(scope="session")
@@ -333,7 +333,10 @@ def test_suite_description() -> str:
     """
     The description of the hive test suite used in this simulator.
     """
-    return "Execute EEST tests using hive endpoint."
+    return (
+        "Sends test transactions directly to the client, asserting they are executed correctly "
+        "after being processed within a block."
+    )
 
 
 @pytest.fixture(autouse=True, scope="session")
