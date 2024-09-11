@@ -7,7 +7,7 @@ abstract: Tests [EIP-4762: Statelessness gas cost changes]
 
 import pytest
 
-from ethereum_test_forks import Verkle
+from ethereum_test_forks import Fork, Verkle
 from ethereum_test_tools import (
     Account,
     Address,
@@ -21,8 +21,6 @@ from ethereum_test_tools import (
 )
 from ethereum_test_tools.vm.opcode import Opcodes as Op
 from ethereum_test_types.verkle.helpers import chunkify_code
-from ethereum_test_forks import Fork
-
 
 # TODO(verkle): Update reference spec version
 REFERENCE_SPEC_GIT_PATH = "EIPS/eip-4762.md"
@@ -78,7 +76,7 @@ def test_extcodecopy_precompile(blockchain_test: BlockchainTestFiller, fork: For
     if target == system_contract_address:
         code = Account(**fork.pre_allocation_blockchain()[system_contract_address]).code
         code_chunks = chunkify_code(code)
-        for i in range(5):
+        for i, chunk in enumerate(code_chunks, start=0):
             witness_check.add_code_chunk(
                 address=TestAddress2, chunk_number=i, value=code_chunks[i]
             )
