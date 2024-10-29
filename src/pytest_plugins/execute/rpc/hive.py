@@ -260,7 +260,16 @@ def base_pre_genesis(
                 timestamp=timestamp,
             ),
         )
-        if base_fork.header_requests_required(block_number=block_number, timestamp=timestamp)
+        if base_fork.header_requests_required(
+            block_number=block_number, timestamp=timestamp
+        )
+        else None,
+        target_blob_count=base_fork.target_blob_count(
+            block_number=block_number, timestamp=timestamp
+        )
+        if base_fork.header_target_blob_count_required(
+            block_number=block_number, timestamp=timestamp
+        )
         else None,
     )
 

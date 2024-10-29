@@ -119,6 +119,7 @@ class Header(CamelModel):
     excess_blob_gas: Removable | HexNumber | None = None
     parent_beacon_block_root: Removable | Hash | None = None
     requests_hash: Removable | Hash | None = None
+    target_blob_count: Removable | HexNumber | None = None
 
     REMOVE_FIELD: ClassVar[Removable] = Removable()
     """
@@ -353,11 +354,16 @@ class BlockchainTest(BaseTest):
             blob_gas_used=env.blob_gas_used,
             excess_blob_gas=env.excess_blob_gas,
             withdrawals_root=(
-                Withdrawal.list_root(env.withdrawals) if env.withdrawals is not None else None
+                Withdrawal.list_root(env.withdrawals)
+                if env.withdrawals is not None
+                else None
             ),
             parent_beacon_block_root=env.parent_beacon_block_root,
             requests_hash=Requests(max_request_type=fork.max_request_type(0, 0))
             if fork.header_requests_required(0, 0)
+            else None,
+            target_blob_count=fork.target_blob_count(0, 0)
+            if fork.header_target_blob_count_required(0, 0)
             else None,
             fork=fork,
         )

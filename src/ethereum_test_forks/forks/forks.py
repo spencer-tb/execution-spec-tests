@@ -730,9 +730,16 @@ class Cancun(Shanghai):
     @classmethod
     def blob_gas_per_blob(cls, block_number: int, timestamp: int) -> int:
         """
-        Blobs are enabled started from Cancun.
+        Blobs are enabled starting from Cancun.
         """
         return 2**17
+    
+    @classmethod
+    def target_blob_count(cls, block_number: int, timestamp: int) -> int:
+        """
+        Blobs are enabled starting from Cancun, with a static target of 3 blobs.
+        """
+        return 3
 
     @classmethod
     def tx_types(cls, block_number: int = 0, timestamp: int = 0) -> List[int]:
@@ -935,6 +942,14 @@ class Prague(Cancun):
         """
         Prague requires that the execution layer header contains the beacon
         chain requests hash.
+        """
+        return True
+
+    @classmethod
+    def header_target_blob_count_required(cls, block_number: int = 0, timestamp: int = 0) -> bool:
+        """
+        Prague requires that the execution layer header contains the beacon
+        chain target blob count.
         """
         return True
 

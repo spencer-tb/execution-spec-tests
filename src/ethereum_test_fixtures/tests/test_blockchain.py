@@ -668,6 +668,7 @@ fixture_header_ones = FixtureHeader(
                     excess_blob_gas=18,
                     parent_beacon_block_root=19,
                     requests_hash=20,
+                    target_blob_count=10,
                 ),
                 transactions=[
                     Transaction(
@@ -1191,6 +1192,7 @@ EngineNewPayloadParametersAdapter = TypeAdapter(EngineNewPayloadParameters)  # t
                         withdrawals_root=Hash(16),
                         blob_gas_used=17,
                         excess_blob_gas=18,
+                        target_blob_count=10,
                     ),
                     transactions=[
                         Transaction(
@@ -1249,6 +1251,7 @@ EngineNewPayloadParametersAdapter = TypeAdapter(EngineNewPayloadParameters)  # t
                     "baseFeePerGas": hex(15),
                     "blobGasUsed": hex(17),
                     "excessBlobGas": hex(18),
+                    "targetBlobCount": hex(10),
                     "blockHash": "0xd90115b7fde329f64335763a446af1"
                     "50ab67e639281dccdb07a007d18bb80211",
                     "transactions": [

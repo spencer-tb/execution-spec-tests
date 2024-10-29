@@ -111,6 +111,9 @@ class FixtureHeader(CamelModel):
         None
     )
     requests_hash: Annotated[Hash, HeaderForkRequirement("requests")] | None = Field(None)
+    target_blob_count: Annotated[
+        ZeroPaddedHexNumber, HeaderForkRequirement("blob_count")
+    ] | None = Field(None)
 
     fork: Fork | None = Field(None, exclude=True)
 
@@ -198,6 +201,8 @@ class FixtureExecutionPayload(CamelModel):
     base_fee_per_gas: HexNumber
     blob_gas_used: HexNumber | None = Field(None)
     excess_blob_gas: HexNumber | None = Field(None)
+
+    target_blob_count: HexNumber | None = Field(None)
 
     block_hash: Hash
 

@@ -162,9 +162,25 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
 
     @classmethod
     @abstractmethod
+    def header_target_blob_count_required(cls, block_number: int, timestamp: int) -> bool:
+        """
+        Returns true if the header must contain target blob count
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
     def blob_gas_per_blob(cls, block_number: int, timestamp: int) -> int:
         """
         Returns the amount of blob gas used per blob for a given fork.
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def target_blob_count(cls, block_number: int, timestamp: int) -> int:
+        """
+        Returns the target blobs per block for a given fork.
         """
         pass
 

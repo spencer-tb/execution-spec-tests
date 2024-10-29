@@ -89,6 +89,7 @@ class Result(CamelModel):
     blob_gas_used: HexNumber | None = None
     requests_hash: Hash | None = None
     requests: List[Bytes] | None = None
+    target_blob_count: HexNumber | None = None
 
 
 class TransitionToolInput(CamelModel):
