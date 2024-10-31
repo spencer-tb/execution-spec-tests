@@ -389,8 +389,7 @@ class EnvironmentGeneric(CamelModel, Generic[NumberBoundTypeVar]):
     difficulty: NumberBoundTypeVar | None = Field(None, alias="currentDifficulty")
     base_fee_per_gas: NumberBoundTypeVar | None = Field(None, alias="currentBaseFee")
     excess_blob_gas: NumberBoundTypeVar | None = Field(None, alias="currentExcessBlobGas")
-
-    target_blob_count: NumberBoundTypeVar | None = Field(None, alias="currentTargetBlobGasUsed")
+    target_blob_count: NumberBoundTypeVar | None = Field(None, alias="currentTargetBlobCount")
 
     parent_difficulty: NumberBoundTypeVar | None = Field(None)
     parent_timestamp: NumberBoundTypeVar | None = Field(None)

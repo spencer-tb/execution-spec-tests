@@ -112,7 +112,7 @@ class FixtureHeader(CamelModel):
     )
     requests_hash: Annotated[Hash, HeaderForkRequirement("requests")] | None = Field(None)
     target_blob_count: Annotated[
-        ZeroPaddedHexNumber, HeaderForkRequirement("blob_count")
+        ZeroPaddedHexNumber, HeaderForkRequirement("target_blob_count")
     ] | None = Field(None)
 
     fork: Fork | None = Field(None, exclude=True)
