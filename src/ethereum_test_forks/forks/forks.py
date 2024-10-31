@@ -976,16 +976,6 @@ class Prague(Cancun):
         """
         return 4
 
-    @classmethod
-    def engine_forkchoice_updated_version(
-        cls, block_number: int = 0, timestamp: int = 0
-    ) -> Optional[int]:
-        """
-        At Prague, version number of NewPayload and ForkchoiceUpdated diverge.
-        """
-        return 3
-
-
 class CancunEIP7692(  # noqa: SC200
     Cancun,
     transition_tool_name="Prague",  # Evmone enables (only) EOF at Prague
