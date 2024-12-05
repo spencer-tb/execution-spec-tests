@@ -20,7 +20,7 @@ from typing import List, Optional, Tuple
 
 import pytest
 
-from ethereum_test_forks import Fork, Prague
+from ethereum_test_forks import Fork
 from ethereum_test_tools import (
     EOA,
     AccessList,
@@ -290,24 +290,14 @@ def tx_access_list() -> List[AccessList]:
 
 
 @pytest.fixture
-def tx_error(
-    request: pytest.FixtureRequest,
-    fork: Fork,
-) -> Optional[TransactionException]:
+def tx_error() -> Optional[TransactionException]:
     """
     Default expected error produced by the block transactions (no error).
 
     Can be overloaded on test cases where the transactions are expected
     to fail.
     """
-    if not hasattr(request, "param"):
-        return None
-    if fork >= Prague and request.param in [
-        TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED,
-        TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED,
-    ]:
-        return None
-    return request.param
+    return None
 
 
 @pytest.fixture
@@ -749,9 +739,9 @@ def test_invalid_normal_gas(
     "tx_error",
     [TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED],
     ids=[""],
-    indirect=True,
 )
 @pytest.mark.valid_from("Cancun")
+@pytest.mark.valid_until("Cancun")
 def test_invalid_block_blob_count(
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
@@ -1020,9 +1010,9 @@ def test_insufficient_balance_blob_tx_combinations(
         ),
     ],
     ids=["too_few_blobs", "too_many_blobs"],
-    indirect=["tx_error"],
 )
 @pytest.mark.valid_from("Cancun")
+@pytest.mark.valid_until("Cancun")
 def test_invalid_tx_blob_count(
     state_test: StateTestFiller,
     state_env: Environment,
