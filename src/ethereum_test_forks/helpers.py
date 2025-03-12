@@ -98,6 +98,15 @@ def get_transition_forks() -> Set[Fork]:
     return transition_forks
 
 
+def get_transition_to_fork(fork: Fork) -> Fork:
+    """Return the final fork for the specified transition fork."""
+    from .transition_base_fork import TransitionBaseClass
+
+    if issubclass(fork, TransitionBaseClass):
+        return fork.transitions_from()
+    return fork
+
+
 def get_from_until_fork_set(
     forks: Set[Fork], forks_from: Set[Fork], forks_until: Set[Fork]
 ) -> Set[Fork]:

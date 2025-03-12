@@ -41,6 +41,7 @@ from .helpers import (
     get_from_until_fork_set,
     get_last_descendants,
     get_transition_forks,
+    get_transition_to_fork,
     transition_fork_from_to,
     transition_fork_to,
 )
@@ -79,6 +80,7 @@ __all__ = [
     "get_forks_with_no_parents",
     "get_forks_with_solc_support",
     "get_forks_without_solc_support",
+    "get_transition_to_fork",
     "get_forks",
     "get_from_until_fork_set",
     "get_last_descendants",

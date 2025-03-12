@@ -16,6 +16,7 @@ import rich
 
 from cli.gen_index import generate_fixtures_index
 from ethereum_test_fixtures.consume import TestCases
+from ethereum_test_forks import get_transition_to_fork
 from ethereum_test_tools.utility.versioning import get_current_commit_hash_or_tag
 
 from .releases import ReleaseTag, get_release_page_url, get_release_url
@@ -354,6 +355,7 @@ def pytest_generate_tests(metafunc):
         return
 
     fork = metafunc.config.getoption("single_fork")
+    fork_to = get_transition_to_fork(fork)
     metafunc.parametrize(
         "test_case,fixture_format",
         (
