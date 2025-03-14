@@ -88,6 +88,7 @@ class ExecutionSpecsTransitionTool(TransitionTool):
                 "--uds",
                 self.server_file_path,
             ],
+            stderr=subprocess.DEVNULL,
         )
         start = time.time()
         while True:
