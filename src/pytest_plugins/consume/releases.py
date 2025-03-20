@@ -16,7 +16,12 @@ CACHED_RELEASE_INFORMATION_FILE = (
     Path(platformdirs.user_cache_dir("ethereum-execution-spec-tests")) / "release_information.json"
 )
 
-SUPPORTED_REPOS = ["ethereum/execution-spec-tests", "ethereum/tests", "ethereum/legacytests"]
+SUPPORTED_REPOS = [
+    "ethereum/execution-spec-tests",
+    "ethereum/tests",
+    "ethereum/legacytests",
+    "spencer-tb/execution-spec-tests",
+]
 
 
 class NoSuchReleaseError(Exception):
