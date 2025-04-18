@@ -24,6 +24,10 @@ G1_POINT_ZERO_FP = PointG1(
     0x92C0F994164A0719F51C24BA3788DE240FF926B55F58C445116E8BC6A47CD63392FD4E8E22BDF9FEAA96EE773222133,  # noqa: E501
 )
 
+FP_TO_ZERO_G1 = FP(
+    1006044755431560595281793557931171729984964515682961911911398807521437683216171091013202870577238485832047490326971  # noqa: E501
+)
+
 
 @pytest.mark.parametrize(
     "input_data,expected_output,vector_gas_value",
@@ -43,6 +47,12 @@ G1_POINT_ZERO_FP = PointG1(
             ),
             None,
             id="fp_p_minus_1",
+        ),
+        pytest.param(
+            FP_TO_ZERO_G1,
+            Spec.INF_G1,
+            None,
+            id="fp_to_infinity",
         ),
     ],
 )
