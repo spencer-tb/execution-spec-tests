@@ -360,6 +360,11 @@ class Frontier(BaseFork, solc_name="homestead"):
         return None
 
     @classmethod
+    def block_rlp_size_limit(cls, block_number: int = 0, timestamp: int = 0) -> int | None:
+        """At Genesis, no RLP block size limit is imposed."""
+        return None
+
+    @classmethod
     def precompiles(cls, block_number: int = 0, timestamp: int = 0) -> List[Address]:
         """At Genesis, no pre-compiles are present."""
         return []
@@ -1349,6 +1354,16 @@ class Osaka(Prague, solc_name="cancun"):
     def transaction_gas_limit_cap(cls, block_number: int = 0, timestamp: int = 0) -> int | None:
         """At Osaka, transaction gas limit is capped at 30 million."""
         return 30_000_000
+
+    @classmethod
+    def block_rlp_size_limit(cls, block_number: int = 0, timestamp: int = 0) -> int | None:
+        """
+        From Osaka, block RLP size is limited to 9,961,472 bytes as specified in EIP-7934.
+
+        MAX_BLOCK_SIZE - SAFETY_MARGIN = MAX_RLP_BLOCK_SIZE
+        10_485_760 (10 MiB) - 524_288 (512 KiB) = 9_961_472
+        """
+        return 9_961_472
 
     @classmethod
     def is_deployed(cls) -> bool:
