@@ -1357,13 +1357,10 @@ class Osaka(Prague, solc_name="cancun"):
 
     @classmethod
     def block_rlp_size_limit(cls, block_number: int = 0, timestamp: int = 0) -> int | None:
-        """
-        From Osaka, block RLP size is limited to 9,961,472 bytes as specified in EIP-7934.
-
-        MAX_BLOCK_SIZE - SAFETY_MARGIN = MAX_RLP_BLOCK_SIZE
-        10_485_760 (10 MiB) - 524_288 (512 KiB) = 9_961_472
-        """
-        return 9_961_472
+        """From Osaka, block RLP size is limited as specified in EIP-7934."""
+        max_block_size = 10_485_760
+        safety_margin = 2_097_152
+        return max_block_size - safety_margin
 
     @classmethod
     def is_deployed(cls) -> bool:
