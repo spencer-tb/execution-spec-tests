@@ -129,6 +129,10 @@ def exact_size_transactions(
     remaining_bytes = target_size - current_size
     remaining_gas = max_block_gas - total_gas_used
 
+    # TODO: This maybe does not need to be so dynamic and can be more deterministic. We
+    #  should look into the rlp encoding for an empty transaction compared with one
+    #  where only the calldata grows enough to fit the exact rlp, do the calculation,
+    #  and use that transaction here instead of searching for the answer.
     if remaining_bytes > 0 and remaining_gas > 50_000:
         base_tx = Transaction(
             sender=sender,
@@ -318,7 +322,7 @@ def test_multiple_transactions_exceed_limit(
 #  way, this is currently testing the boundary... we just need a better setup.
 # @pytest.mark.exception_test
 @pytest.mark.parametrize("from_limit", [-1, 0, 1])
-def test_block_at_exact_rlp_size_limit(
+def test_block_at_rlp_size_limit_boundary(
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
     post: Alloc,
