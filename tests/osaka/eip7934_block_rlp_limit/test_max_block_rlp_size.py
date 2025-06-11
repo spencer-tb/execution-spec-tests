@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 import pytest
 
-from ethereum_test_base_types import AccessList, ZeroPaddedHexNumber
+from ethereum_test_base_types import ZeroPaddedHexNumber
 from ethereum_test_fixtures.blockchain import (
     FixtureBlockBase,
     FixtureHeader,
@@ -235,93 +235,17 @@ def exact_size_transactions(
     return transactions, final_gas
 
 
-@pytest.fixture
-def oversized_calldata(block_size_limit: int) -> Bytes:
-    """Generate oversized calldata that exceeds the block limit."""
-    size = block_size_limit + 10000
-    return Bytes(b"0x" + b"ff" * size)
-
-
-@pytest.fixture
-def large_calldata(block_size_limit: int) -> Bytes:
-    """Generate large calldata that's about 1/4 of the block limit."""
-    size = block_size_limit // 4
-    return Bytes(b"0x" + b"00" * size)
-
-
-@pytest.fixture
-def oversized_transaction(sender, oversized_calldata: Bytes):
-    """Create a single transaction with oversized calldata."""
-    return Transaction(
-        sender=sender,
-        nonce=0,
-        max_fee_per_gas=10**11,
-        max_priority_fee_per_gas=10**11,
-        gas_limit=30_000_000,
-        data=oversized_calldata,
-    )
-
-
-@pytest.fixture
-def multiple_large_transactions(sender, large_calldata: Bytes):
-    """Create multiple transactions with large calldata."""
-    txs = []
-    for i in range(5):
-        tx = Transaction(
-            sender=sender,
-            nonce=i,
-            max_fee_per_gas=10**11,
-            max_priority_fee_per_gas=10**11,
-            gas_limit=30_000_000,
-            data=large_calldata,
-        )
-        txs.append(tx)
-    return txs
-
-
-def test_block_exceeds_rlp_size_limit(
-    blockchain_test: BlockchainTestFiller,
-    pre: Alloc,
-    post: Alloc,
-    oversized_transaction: Transaction,
-):
-    """Test that blocks exceeding the `MAX_RLP_BLOCK_SIZE` are rejected with a single tx."""
-    block = Block(
-        txs=[oversized_transaction],
-        exception=BlockException.RLP_BLOCK_LIMIT_EXCEEDED,
-    )
-
-    blockchain_test(
-        pre=pre,
-        post=post,
-        blocks=[block],
-    )
-
-
-def test_multiple_transactions_exceed_limit(
-    blockchain_test: BlockchainTestFiller,
-    pre: Alloc,
-    post: Alloc,
-    multiple_large_transactions: List[Transaction],
-):
-    """Test that blocks with multiple large transactions exceed the `MAX_RLP_BLOCK_SIZE`."""
-    block = Block(
-        txs=multiple_large_transactions,
-        exception=BlockException.RLP_BLOCK_LIMIT_EXCEEDED,
-    )
-
-    blockchain_test(
-        pre=pre,
-        post=post,
-        blocks=[block],
-    )
-
-
-# TODO: If we try to raise the exception, the test fails on the 2 successful runs. If
-#  we don't raise the exception, the test fails on the 3rd run with an exception. Either
-#  way, this is currently testing the boundary... we just need a better setup.
-# @pytest.mark.exception_test
-@pytest.mark.parametrize("from_limit", [-1, 0, 1])
+@pytest.mark.parametrize(
+    "from_limit",
+    [
+        -1,  # max RLP size - 1 byte, valid
+        0,  # exactly max RLP size, valid
+        pytest.param(  # max RLP size + 1 byte, invalid
+            1,
+            marks=pytest.mark.exception_test,
+        ),
+    ],
+)
 def test_block_at_rlp_size_limit_boundary(
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
@@ -340,18 +264,15 @@ def test_block_at_rlp_size_limit_boundary(
     """
     transactions, gas_used = exact_size_transactions
     block_rlp_size = get_block_rlp_size(transactions, gas_used=gas_used)
-
     assert block_rlp_size == block_size_limit, (
         f"Block RLP size {block_rlp_size} does not exactly match limit {block_size_limit}, "
         f"difference: {block_rlp_size - block_size_limit} bytes"
     )
-
-    # exception = BlockException.RLP_BLOCK_LIMIT_EXCEEDED if from_limit == 1 else None
+    exception = BlockException.RLP_BLOCK_LIMIT_EXCEEDED if from_limit == 1 else None
     block = Block(
         txs=transactions,
-        # exception=exception,
+        exception=exception,
     )
-
     if from_limit == -1:
         # remove last byte
         block.extra_data = Bytes(EXTRA_DATA_AT_LIMIT[:-1])
@@ -362,7 +283,6 @@ def test_block_at_rlp_size_limit_boundary(
     else:
         raise ValueError(f"Invalid from_limit value: {from_limit}")
     block.timestamp = ZeroPaddedHexNumber(HEADER_TIMESTAMP)
-
     blockchain_test(
         genesis_environment=env,
         pre=pre,
@@ -376,27 +296,28 @@ def test_block_slightly_over_rlp_size_limit(
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
     post: Alloc,
-    exact_size_transactions: List[Transaction],
+    exact_size_transactions: Tuple[List[Transaction], int],
     block_size_limit: int,
     sender,
     env: Environment,
 ):
     """Test that a block at exactly the MAX_RLP_BLOCK_SIZE is accepted."""
-    block_rlp_size = get_block_rlp_size(exact_size_transactions)
+    transactions, gas_used = exact_size_transactions
+    block_rlp_size = get_block_rlp_size(transactions, gas_used=gas_used)
     assert block_rlp_size == block_size_limit, (
         f"Block RLP size {block_rlp_size} does not exactly match limit {block_size_limit}, "
         f"difference: {block_rlp_size - block_size_limit} bytes"
     )
     extra_tx = Transaction(
         sender=sender,
-        nonce=len(exact_size_transactions),
+        nonce=len(transactions),
         max_fee_per_gas=10**9,
         max_priority_fee_per_gas=10**9,
         gas_limit=200_000,
         data=b"\x00" * 100,
     )
     block = Block(
-        txs=exact_size_transactions + [extra_tx],
+        txs=transactions + [extra_tx],
         exception=BlockException.RLP_BLOCK_LIMIT_EXCEEDED,
     )
     blockchain_test(
