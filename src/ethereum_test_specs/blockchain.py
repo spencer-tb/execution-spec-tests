@@ -616,10 +616,7 @@ class BlockchainTest(BaseTest):
                 #   produces the block exception.
                 # - No requests were specified, because modified requests are also what normally
                 #   produces the block exception.
-                verify_block(
-                    block_number=env.number,
-                    want_exception=block.exception,
-                    got_exception=transition_tool_output.result.block_exception,
+                built_block.verify_block_exception(
                     transition_tool_exceptions_reliable=t8n.exception_mapper.reliable,
                 )
             verify_result(transition_tool_output.result, env)
