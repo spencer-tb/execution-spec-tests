@@ -19,7 +19,7 @@ def post() -> Alloc:
 
 @pytest.fixture
 def env() -> Environment:
-    return Environment(gas_limit=100_000_000)
+    return Environment(gas_limit=200_000_000)
 
 
 @pytest.fixture
