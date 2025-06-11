@@ -315,7 +315,6 @@ class BuiltBlock(CamelModel):
         fixture_block = FixtureBlockBase(
             header=self.header,
             txs=[FixtureTransaction.from_transaction(tx) for tx in self.txs],
-            ommers=self.ommers,
             withdrawals=(
                 [FixtureWithdrawal.from_withdrawal(w) for w in self.withdrawals]
                 if self.withdrawals is not None
@@ -323,6 +322,7 @@ class BuiltBlock(CamelModel):
             ),
             fork=self.fork,
         ).with_rlp(txs=self.txs)
+
         if self.expected_exception is not None:
             return InvalidFixtureBlock(
                 rlp=fixture_block.rlp,
