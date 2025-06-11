@@ -8,18 +8,18 @@ from ethereum_test_tools import (
     Alloc,
 )
 from ethereum_test_tools.vm.opcode import Opcodes as Op
-
-
-@pytest.fixture
-def pre() -> Alloc:
-    """Pre state allocation fixture."""
-    return Alloc()
+from ethereum_test_types import Environment
 
 
 @pytest.fixture
 def post() -> Alloc:
     """Post state allocation fixture."""
     return Alloc()
+
+
+@pytest.fixture
+def env() -> Environment:
+    return Environment(gas_limit=100_000_000)
 
 
 @pytest.fixture

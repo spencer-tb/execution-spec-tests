@@ -22,8 +22,8 @@ class Spec:
     """
 
     MAX_BLOCK_SIZE = 10_485_760  # 10 MiB
-    SAFETY_MARGIN = 524_288  # 512 KiB
-    MAX_RLP_BLOCK_SIZE = MAX_BLOCK_SIZE - SAFETY_MARGIN  # 9,961,472 bytes
+    SAFETY_MARGIN = 2_097_152  # 2 MiB
+    MAX_RLP_BLOCK_SIZE = MAX_BLOCK_SIZE - SAFETY_MARGIN  # 8_388_608 bytes
 
     @staticmethod
     def exceed_max_rlp_block_size(rlp_encoded_block: bytes) -> bool:
