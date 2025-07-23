@@ -8,8 +8,7 @@ import pytest
 from ethereum_test_execution import BaseExecute, LabeledExecuteFormat
 from ethereum_test_fixtures import BaseFixture, LabeledFixtureFormat
 from ethereum_test_specs import BaseTest
-from ethereum_test_tools import Environment
-from ethereum_test_types import EOA, Alloc
+from ethereum_test_types import EOA, Alloc, Environment
 
 from ..spec_version_checker.spec_version_checker import EIPSpecTestItem
 
@@ -196,6 +195,12 @@ def pytest_addoption(parser: pytest.Parser):
     )
 
 
+GIGA_GAS = 1_000_000_000
+
+
 @pytest.fixture
 def env(request: pytest.FixtureRequest) -> Environment:  # noqa: D103
+    """Return an Environment instance with appropriate gas limit based on operation mode."""
+    if request.config.op_mode == OpMode.BENCHMARKING:  # type: ignore[attr-defined]
+        return Environment(gas_limit=GIGA_GAS)
     return Environment()
