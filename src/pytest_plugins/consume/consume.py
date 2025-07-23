@@ -298,6 +298,16 @@ def pytest_addoption(parser):  # noqa: D103
     )
 
 
+def pytest_configure_node(node):
+    """Share test cases with xdist worker nodes."""
+    if hasattr(node.config, "test_cases"):
+        # Manually serialize each test case to ensure proper format
+        serialized_cases = []
+        for test_case in node.config.test_cases:
+            serialized_cases.append(test_case.model_dump())
+        node.workerinput["test_cases_data"] = serialized_cases
+
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):  # noqa: D103
     """
@@ -308,6 +318,14 @@ def pytest_configure(config):  # noqa: D103
     called before the pytest-html plugin's pytest_configure to ensure that
     it uses the modified `htmlpath` option.
     """
+    # Handle xdist worker nodes
+    if hasattr(config, "workerinput") and "test_cases_data" in config.workerinput:
+        from ethereum_test_fixtures.consume import TestCaseIndexFile
+
+        config.test_cases = []
+        for case_data in config.workerinput["test_cases_data"]:
+            config.test_cases.append(TestCaseIndexFile.model_validate(case_data))
+        return
     if config.option.fixtures_source is None:
         # NOTE: Setting the default value here is necessary for correct stdin/piping behavior.
         config.fixtures_source = FixturesSource(
