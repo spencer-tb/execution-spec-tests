@@ -433,6 +433,7 @@ def pytest_configure(config):  # noqa: D103
     all_forks.update(getattr(index, "forks", []))
     for fork in all_forks:
         config.addinivalue_line("markers", f"{fork}: Tests for the {fork} fork")
+        config.addinivalue_line("markers", f"{str(fork).lower()}: Tests for the {fork} fork")
 
     if config.option.sim_limit:
         if config.option.dest_regex != ".*":
@@ -495,6 +496,7 @@ def pytest_generate_tests(metafunc):
         if test_case.format.format_name not in metafunc.config._supported_fixture_formats:
             continue
         fork_markers = get_relative_fork_markers(test_case.fork, strict_mode=False)
+        fork_markers += [m.lower() for m in fork_markers]
         param = pytest.param(
             test_case,
             id=test_case.id,
