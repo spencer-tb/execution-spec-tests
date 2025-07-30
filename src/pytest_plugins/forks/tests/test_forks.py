@@ -122,7 +122,7 @@ def test_from_london_until_shanghai_option_no_validity_marker(pytester: pytest.P
     )
     pytester.copy_example(name="src/cli/pytest_commands/pytest_ini_files/pytest-fill.ini")
     result = pytester.runpytest(
-        "-c", "pytest-fill.ini", "-v", "--from", "London", "--until", "Shanghai"
+        "-c", "pytest-fill.ini", "-v", "--from", "London", "--until", "shanghai"
     )
     forks_under_test = forks_from_until(fork_map["London"], fork_map["Shanghai"])
     expected_passed = len(forks_under_test) * len(StateTest.supported_fixture_formats)
@@ -170,7 +170,7 @@ def test_from_paris_until_paris_option_no_validity_marker(pytester: pytest.Pytes
     )
     pytester.copy_example(name="src/cli/pytest_commands/pytest_ini_files/pytest-fill.ini")
     result = pytester.runpytest(
-        "-c", "pytest-fill.ini", "-v", "--from", "Paris", "--until", "Paris"
+        "-c", "pytest-fill.ini", "-v", "--from", "paris", "--until", "paris"
     )
     forks_under_test = forks_from_until(fork_map["Paris"], fork_map["Paris"])
     expected_passed = len(forks_under_test) * len(StateTest.supported_fixture_formats)
