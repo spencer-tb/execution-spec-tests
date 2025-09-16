@@ -256,3 +256,38 @@ def test_warm_coinbase_gas_usage(
         tx=tx,
         tag="opcode_" + opcode.lower(),
     )
+
+
+@pytest.mark.valid_from("Shanghai")
+def test_coinbase_warm_but_receives_no_tip(
+    state_test: StateTestFiller,
+    env: Environment,
+    pre: Alloc,
+    post: Alloc,
+    sender: Address,
+    fork: Fork,
+):
+    """Test that coinbase is warm but receives no ETH when priority fee is zero."""
+    # Contract that makes zero-value call to coinbase (proving warmness)
+    verify_warm_code = Op.SSTORE(
+        0, Op.CALL(GAS_REQUIRED_CALL_WARM_ACCOUNT, Op.COINBASE, 0, 0, 0, 0, 0)
+    ) + Op.RETURN(0, 32)
+    contract_address = pre.deploy_contract(verify_warm_code)
+
+    tx = Transaction(
+        to=contract_address,
+        gas_limit=50_000,
+        max_fee_per_gas=1000,
+        max_priority_fee_per_gas=0,  # No tip to coinbase
+        sender=sender,
+    )
+
+    post[contract_address] = Account(storage={0: 1})
+
+    state_test(
+        env=env,
+        pre=pre,
+        post=post,
+        tx=tx,
+        tag="coinbase_warm_no_tip",
+    )
