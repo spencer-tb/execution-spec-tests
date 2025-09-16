@@ -259,13 +259,12 @@ def test_warm_coinbase_gas_usage(
 
 
 @pytest.mark.valid_from("Shanghai")
-def test_coinbase_warm_but_receives_no_tip(
+def test_warm_coinbase_no_tip(
     state_test: StateTestFiller,
     env: Environment,
     pre: Alloc,
     post: Alloc,
     sender: Address,
-    fork: Fork,
 ):
     """Test that coinbase is warm but receives no ETH when priority fee is zero."""
     # Contract that makes zero-value call to coinbase (proving warmness)
